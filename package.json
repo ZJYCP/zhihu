@@ -13,6 +13,7 @@
     "import": "tsx scripts/import-articles.ts"
   },
   "dependencies": {
+    "@prisma/adapter-d1": "^7.2.0",
     "@prisma/client": "^6.1.0",
     "cheerio": "^1.0.0",
     "clsx": "^2.1.1",

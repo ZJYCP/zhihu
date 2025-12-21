@@ -67,7 +67,10 @@ async function getAllTxtFiles(dir: string): Promise<string[]> {
 }
 
 async function main() {
-  const resourceDir = path.join(process.cwd(), "resource/B开头专栏")
+  const resourceDir = path.join(
+    process.cwd(),
+    "resource/知乎盐选付费文章BCEFGHJKZ开头合集"
+  )
 
   console.log("🔍 扫描资源目录...")
   const txtFiles = await getAllTxtFiles(resourceDir)
@@ -80,6 +83,7 @@ async function main() {
   for (const filePath of txtFiles) {
     const filename = path.basename(filePath)
     const title = extractTitle(filename)
+    const column = path.basename(path.dirname(filePath)) // 父文件夹名作为专栏
 
     try {
       const buffer = await fs.readFile(filePath)
@@ -123,6 +127,7 @@ async function main() {
           status: "COMPLETED",
           title,
           content,
+          column,
         },
       })
 

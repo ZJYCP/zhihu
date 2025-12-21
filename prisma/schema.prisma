@@ -15,6 +15,7 @@ model CrawlTask {
   content   String?  @db.Text
   html      String?  @db.Text
   author    String?
+  column    String?  // 专栏名称，导入时从父文件夹名获取
   error     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
