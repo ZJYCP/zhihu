@@ -1,0 +1,35 @@
+{
+  "name": "zhihu-crawler",
+  "version": "2.0.0",
+  "description": "知乎付费专栏爬虫 - 基于Playwright + 读屏技术",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "crawl": "tsx src/index.ts",
+    "debug": "tsx src/index.ts --debug"
+  },
+  "keywords": [
+    "zhihu",
+    "crawler",
+    "playwright",
+    "accessibility"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.49.1",
+    "sharp": "^0.34.5",
+    "tesseract.js": "^7.0.0",
+    "turndown": "^7.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/sharp": "^0.31.1",
+    "@types/turndown": "^5.0.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
