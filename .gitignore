@@ -2,9 +2,22 @@ node_modules/
 dist/
 output/
 .env
+.env.local
 *.log
 .DS_Store
 Thumbs.db
 .bmad-core
 .claude/commands/BMad
 docs/
+
+# Next.js
+.next/
+out/
+
+# Prisma
+prisma/*.db
+
+# Misc
+temp_grid.png
+chi_sim.traineddata
+test.html
