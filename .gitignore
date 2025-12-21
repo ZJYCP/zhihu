@@ -24,3 +24,7 @@ chi_sim.traineddata
 test.html
 
 resource
+
+.wrangler
+wrangler.toml
+.dev.vars
