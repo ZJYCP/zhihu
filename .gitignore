@@ -5,3 +5,6 @@ output/
 *.log
 .DS_Store
 Thumbs.db
+.bmad-core
+.claude/commands/BMad
+docs/

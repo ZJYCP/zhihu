@@ -1,6 +1,12 @@
 import { chromium, Browser, BrowserContext } from "playwright"
 import { Config, parseCookies } from "./config.js"
 import { ocrImages } from "./ocr.js"
+import {
+  extractFontBase64,
+  decodeFontMapping,
+  decodeText,
+  FontMapping,
+} from "./font-decoder.js"
 import fs from "fs/promises"
 import path from "path"
 import sharp from "sharp"
@@ -18,6 +24,7 @@ export class ZhihuCrawler {
   private config: Config
   private browser: Browser | null = null
   private context: BrowserContext | null = null
+  private fontCache: Map<string, FontMapping> = new Map() // 字体映射缓存
 
   constructor(config: Config) {
     this.config = config
@@ -268,5 +275,106 @@ export class ZhihuCrawler {
 
   async delay(ms?: number): Promise<void> {
     return new Promise(r => setTimeout(r, ms || this.config.requestDelay))
+  }
+
+  /**
+   * 字体解码模式爬取 - 解析字体映射后替换文本
+   */
+  async crawlWithFontDecode(url: string): Promise<CrawlResult> {
+    if (!this.context) throw new Error("浏览器未初始化")
+
+    const page = await this.context.newPage()
+    let isFirstNavigation = true
+
+    await page.route("**/*", route => {
+      const request = route.request()
+      if (request.isNavigationRequest()) {
+        if (isFirstNavigation) {
+          isFirstNavigation = false
+          route.continue()
+        } else {
+          route.abort()
+        }
+      } else {
+        route.continue()
+      }
+    })
+
+    try {
+      console.log(`\n📖 正在打开: ${url}`)
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 })
+
+      console.log("  ⏳ 等待内容渲染...")
+      await page
+        .waitForSelector('[class^="ManuscriptIntro-root-"]', { timeout: 10000 })
+        .catch(() => {
+          console.log("  ⚠️ 未找到标准内容区域")
+        })
+      await this.delay(100)
+
+      // 提取字体CSS
+      console.log("\n🔤 提取字体信息...")
+      const fontCss = await page.evaluate(() => {
+        const styles: string[] = []
+
+        Array.from(document.styleSheets).forEach(sheet => {
+          try {
+            Array.from(sheet.cssRules).forEach(rule => {
+              if (rule.cssText.includes("@font-face")) styles.push(rule.cssText)
+            })
+          } catch {}
+        })
+        return styles
+      })
+
+      // 提取原始文本并解码
+      const rawText = await page.evaluate(() => {
+        const el = document.getElementById("manuscript")
+        return el?.innerText || ""
+      })
+      // 提取HTML
+      const html = await page.evaluate(() => {
+        const el = document.getElementById("manuscript")
+        return el?.innerHTML || ""
+      })
+      // 提取标题
+      const title = await page
+        .$eval(
+          '[class^="ManuscriptTitle-root-"]',
+          el => el.textContent?.trim() || ""
+        )
+        .catch(() => `未知标题_${Date.now()}`)
+
+      const base64Font = extractFontBase64(fontCss[2])
+      let mapping: FontMapping = {}
+
+      if (base64Font) {
+        // 检查缓存
+        const cacheKey = base64Font.slice(0, 100)
+        if (this.fontCache.has(cacheKey)) {
+          mapping = this.fontCache.get(cacheKey)!
+          console.log(
+            `  ✅ 使用缓存的字体映射 (${Object.keys(mapping).length} 字符)`
+          )
+        } else {
+          console.log(
+            `  📦 字体大小: ${Math.round(base64Font.length / 1024)}KB`
+          )
+          mapping = await decodeFontMapping(base64Font, { useOnlineOcr: true })
+          this.fontCache.set(cacheKey, mapping)
+        }
+      } else {
+        console.log("  ⚠️ 未检测到自定义字体")
+      }
+
+      const content =
+        Object.keys(mapping).length > 0 ? decodeText(rawText, mapping) : rawText
+
+      console.log(`\n✅ 内容提取完成 (${content.length} 字符)`)
+
+      return { title, content, html, url }
+    } finally {
+      await page.close()
+    }
   }
 }

@@ -27,8 +27,8 @@ async function main() {
     // 使用示例URL进行测试
     console.log("\n📌 使用示例URL进行测试...\n")
     args.push(
-      // "https://www.zhihu.com/market/paid_column/1702723501155422208/section/1788920608135983104"
-      "https://www.zhihu.com/market/paid_column/1762134823798050816/section/1763886015264251905"
+      "https://www.zhihu.com/market/paid_column/1702723501155422208/section/1788920608135983104"
+      // "https://www.zhihu.com/market/paid_column/1762134823798050816/section/1763886015264251905"
     )
   }
 
@@ -66,7 +66,7 @@ async function main() {
     let result
     switch (urlInfo.type) {
       case "paid_column":
-        result = await crawler.crawlPaidColumn(url)
+        result = await crawler.crawlWithFontDecode(url)
         break
       default:
         console.log("⚠️ 当前版本仅支持付费专栏，其他类型待实现")

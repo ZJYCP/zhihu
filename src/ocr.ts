@@ -78,8 +78,9 @@ export async function ocrImage(
         ],
       },
     ],
-    stream: false,
-    response_format: { type: "text" },
+    temperature: 0,
+    top_k: 50,
+    top_p: 0.7,
   }
 
   const response = await fetch(
