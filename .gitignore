@@ -9,6 +9,7 @@ Thumbs.db
 .bmad-core
 .claude/commands/BMad
 docs/
+CLAUDE.md
 
 # Next.js
 .next/
@@ -21,3 +22,5 @@ prisma/*.db
 temp_grid.png
 chi_sim.traineddata
 test.html
+
+resource

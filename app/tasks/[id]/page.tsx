@@ -1,49 +1,79 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ExportButtons } from "./export-buttons";
 
-export default async function TaskPage({
+export default async function ArticlePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const task = await prisma.crawlTask.findUnique({ where: { id } });
+  const article = await prisma.crawlTask.findUnique({ where: { id } });
 
-  if (!task) {
+  if (!article || article.status !== "COMPLETED") {
     notFound();
   }
 
   return (
-    <main className="container mx-auto max-w-4xl p-6">
+    <main className="container mx-auto max-w-3xl p-6">
+      {/* 导航 */}
       <Link
         href="/"
-        className="text-sm text-[hsl(var(--muted-foreground))] hover:underline mb-4 inline-block"
+        className="inline-flex items-center gap-1 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] mb-8"
       >
-        ← 返回列表
+        <ArrowLeft className="h-4 w-4" />
+        返回列表
       </Link>
 
-      <h1 className="text-3xl font-bold mb-4">{task.title || "无标题"}</h1>
+      {/* 标题 */}
+      <h1 className="text-3xl font-bold mb-4 leading-tight">
+        {article.title || "无标题"}
+      </h1>
 
-      <div className="flex gap-4 text-sm text-[hsl(var(--muted-foreground))] mb-6">
-        {task.author && <span>作者: {task.author}</span>}
-        <span>创建时间: {task.createdAt.toLocaleString("zh-CN")}</span>
+      {/* 元信息 */}
+      <div className="flex flex-wrap items-center gap-3 text-sm text-[hsl(var(--muted-foreground))] mb-6">
+        {article.author && <span>{article.author}</span>}
+        {article.author && <span>·</span>}
+        <span>{article.createdAt.toLocaleDateString("zh-CN")}</span>
+        <span>·</span>
+        <a
+          href={article.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-blue-500 hover:underline"
+        >
+          查看原文
+          <ExternalLink className="h-3 w-3" />
+        </a>
       </div>
 
-      <a
-        href={task.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-sm text-blue-500 hover:underline mb-8 block"
-      >
-        原文链接 ↗
-      </a>
+      {/* 分割线 */}
+      <hr className="mb-8" />
 
-      <article className="prose prose-neutral max-w-none">
-        {task.content?.split("\n").map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
+      {/* 正文 */}
+      <article className="prose prose-neutral max-w-none leading-relaxed">
+        {article.content?.split("\n").map((paragraph, i) => {
+          const trimmed = paragraph.trim();
+          if (!trimmed) return null;
+          return (
+            <p key={i} className="mb-6 text-base leading-[1.8]">
+              {trimmed}
+            </p>
+          );
+        })}
       </article>
+
+      {/* 导出按钮 */}
+      <div className="mt-12 pt-8 border-t">
+        <ExportButtons
+          title={article.title || "无标题"}
+          author={article.author}
+          url={article.url}
+          content={article.content || ""}
+        />
+      </div>
     </main>
   );
 }
