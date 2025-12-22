@@ -11,7 +11,7 @@ function extractTitle(filename: string): string {
   // 去除 .txt 后缀
   const name = filename.replace(/\.txt$/, "")
   // 去除开头的数字序号（如 "1"、"01"、"10" 等）
-  return name.replace(/^\d+/, "").trim()
+  return name.replace(/^[\d.]+\s*/, "").trim()
 }
 
 // 清洗文章内容
@@ -32,7 +32,7 @@ function cleanContent(content: string, title: string): string {
   }
 
   // 移除开头的盗版说明
-  const fanwei = cleaned.slice(0, 150)
+  const fanwei = cleaned.slice(0, 350)
   if (fanwei.indexOf(title) !== -1) {
     cleaned = cleaned.slice(fanwei.indexOf(title) + title.length).trim()
   }

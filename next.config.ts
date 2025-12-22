@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["playwright", "sharp", "opentype.js"],
+  serverExternalPackages: ["sharp", "opentype.js"],
 };
 
 export default nextConfig;

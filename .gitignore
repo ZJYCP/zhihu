@@ -21,6 +21,7 @@ prisma/*.db
 # Misc
 temp_grid.png
 chi_sim.traineddata
-test.html
+
+build
 
 resource
