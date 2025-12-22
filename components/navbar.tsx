@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/theme-provider";
-import { BookOpen, Settings, Sun, Moon, BarChart3 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { useTheme } from "@/components/theme-provider"
+import { BookOpen, Settings, Sun, Moon, BarChart3 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export function Navbar() {
-  const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const pathname = usePathname()
+  const { theme, setTheme } = useTheme()
 
   const navItems = [
     { href: "/", label: "内容库", icon: BookOpen },
     { href: "/stats", label: "统计", icon: BarChart3 },
     { href: "/settings", label: "设置", icon: Settings },
-  ];
+  ]
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-[hsl(var(--background))]/95 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60">
@@ -30,13 +30,13 @@ export function Navbar() {
 
         {/* Nav Links */}
         <nav className="flex items-center gap-1 flex-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
+          {navItems.map(item => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
             return (
               <Link key={item.href} href={item.href}>
                 <Button
-                  variant={isActive ? "secondary" : "ghost"}
+                  variant={isActive ? "default" : "ghost"}
                   size="sm"
                   className={cn(
                     "gap-2",
@@ -47,7 +47,7 @@ export function Navbar() {
                   <span className="hidden sm:inline">{item.label}</span>
                 </Button>
               </Link>
-            );
+            )
           })}
         </nav>
 
@@ -65,5 +65,5 @@ export function Navbar() {
         </Button>
       </div>
     </header>
-  );
+  )
 }
