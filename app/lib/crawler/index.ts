@@ -1,21 +1,30 @@
-import * as cheerio from "cheerio";
-import { type CrawlerConfig, parseZhihuUrl } from "./config";
-import { extractFontBase64, decodeFontMapping, decodeText, type FontMapping } from "./font-decoder";
+import * as cheerio from "cheerio"
+import { type CrawlerConfig, parseZhihuUrl } from "./config"
+import {
+  extractFontBase64,
+  decodeFontMapping,
+  decodeText,
+  type FontMapping,
+} from "./font-decoder"
 
 export interface CrawlResult {
-  title: string;
-  content: string;
-  html: string;
-  author?: string;
-  url: string;
+  title: string
+  content: string
+  html: string
+  author?: string
+  url: string
 }
 
-const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+const USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
-export async function crawlZhihu(url: string, config: CrawlerConfig): Promise<CrawlResult> {
-  const urlInfo = parseZhihuUrl(url);
+export async function crawlZhihu(
+  url: string,
+  config: CrawlerConfig
+): Promise<CrawlResult> {
+  const urlInfo = parseZhihuUrl(url)
   if (urlInfo.type === "unknown") {
-    throw new Error("不支持的 URL 格式");
+    throw new Error("不支持的 URL 格式")
   }
 
   // 直接请求页面
@@ -26,49 +35,68 @@ export async function crawlZhihu(url: string, config: CrawlerConfig): Promise<Cr
       Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
     },
-  });
+  })
 
   if (!response.ok) {
-    throw new Error(`请求失败: ${response.status}`);
+    throw new Error(`请求失败: ${response.status}`)
   }
 
-  const html = await response.text();
-  const $ = cheerio.load(html);
+  const html = await response.text()
+  const $ = cheerio.load(html)
 
   // 提取标题
-  const title = $('[class^="ManuscriptTitle-root-"]').text().trim() || `未知标题_${Date.now()}`;
+  const title =
+    $('[class^="ManuscriptTitle-root-"]').text().trim() ||
+    `未知标题_${Date.now()}`
 
   // 提取正文
-  const manuscript = $("#manuscript");
-  const rawText = manuscript.text();
-  const rawHtml = manuscript.html() || "";
+  const manuscript = $("#manuscript")
+  const rawHtml = manuscript.html() || ""
+
+  // 模拟 innerText：块级元素转换为换行符
+  const manuscriptClone = manuscript.clone()
+  manuscriptClone
+    .find("p, div, br, h1, h2, h3, h4, h5, h6, li")
+    .each((_, el) => {
+      $(el).append("\n")
+    })
+  const rawText = manuscriptClone
+    .text()
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
 
   // 提取字体 CSS
-  let fontMapping: FontMapping = {};
-  const styleContent = $("style").text();
-  const fontFaceMatches = styleContent.match(/@font-face\s*\{[^}]+\}/g) || [];
+  let fontMapping: FontMapping = {}
+  const styleContent = $("style").text()
+  const fontFaceMatches = styleContent.match(/@font-face\s*\{[^}]+\}/g) || []
 
   // 通常第三个 @font-face 是内容字体
   if (fontFaceMatches.length >= 3) {
-    const base64Font = extractFontBase64(fontFaceMatches[2]);
+    const base64Font = extractFontBase64(fontFaceMatches[2])
     if (base64Font && config.siliconflowApiKey) {
       try {
-        fontMapping = await decodeFontMapping(base64Font, config.siliconflowApiKey);
+        fontMapping = await decodeFontMapping(
+          base64Font,
+          config.siliconflowApiKey
+        )
       } catch (e) {
-        console.error("字体解码失败:", e);
+        console.error("字体解码失败:", e)
       }
     }
   }
 
   // 解码文本
-  const content = Object.keys(fontMapping).length > 0 ? decodeText(rawText, fontMapping) : rawText;
+  const content =
+    Object.keys(fontMapping).length > 0
+      ? decodeText(rawText, fontMapping)
+      : rawText
 
   return {
     title,
     content,
     html: rawHtml,
     url,
-  };
+  }
 }
 
-export { parseZhihuUrl } from "./config";
+export { parseZhihuUrl } from "./config"
