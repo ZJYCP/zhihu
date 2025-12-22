@@ -8,17 +8,21 @@ datasource db {
 }
 
 model CrawlTask {
-  id        String   @id @default(cuid())
-  url       String
-  status    Status   @default(PENDING)
-  title     String?
-  content   String?  @db.Text
-  html      String?  @db.Text
-  author    String?
-  column    String?  // 专栏名称，导入时从父文件夹名获取
-  error     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(cuid())
+  url             String
+  status          Status   @default(PENDING)
+  title           String?
+  content         String?
+  html            String?
+  author          String?
+  column          String?
+  error           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  content_preview String?  @default(dbgenerated("\"left\"(content, 600)"))
+
+@@index([status, createdAt])
+@@index([status])
 }
 
 enum Status {

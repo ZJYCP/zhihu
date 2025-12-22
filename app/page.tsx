@@ -20,7 +20,7 @@ interface Article {
   id: string;
   title: string | null;
   author: string | null;
-  content: string | null;
+  content_preview: string | null;
   url: string;
   createdAt: string;
 }
@@ -342,7 +342,7 @@ export default function Home() {
                       {article.title || "无标题"}
                     </h3>
                     <p className="text-xs text-[hsl(var(--muted-foreground))] line-clamp-3 flex-1 mb-3">
-                      {article.content?.slice(0, 100)}...
+                      {article.content_preview?.slice(0, 100)}...
                     </p>
                     <div className="flex items-center justify-between pt-2 border-t border-[hsl(var(--border))]">
                       <p className="text-xs text-[hsl(var(--muted-foreground))] truncate flex-1">
@@ -350,7 +350,7 @@ export default function Home() {
                         {article.author && " · "}
                         {formatDate(article.createdAt)}
                       </p>
-                      <Button
+                      {/* <Button
                         size="sm"
                         variant="ghost"
                         className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 shrink-0"
@@ -360,7 +360,7 @@ export default function Home() {
                         }}
                       >
                         <Trash2 className="h-3 w-3" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </CardContent>
                 </Card>

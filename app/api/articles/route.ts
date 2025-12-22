@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     ...(search && {
       OR: [
         { title: { contains: search, mode: "insensitive" as const } },
-        { content: { contains: search, mode: "insensitive" as const } },
+        { content_preview: { contains: search, mode: "insensitive" as const } },
       ],
     }),
   };
@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         title: true,
-        author: true,
-        content: true,
+        author: true,  
+        content_preview: true,
         url: true,
         createdAt: true,
       },
@@ -36,6 +36,9 @@ export async function GET(request: NextRequest) {
     prisma.crawlTask.count({ where }),
   ]);
 
+  articles.forEach(article => {
+    article.content_preview = article.content_preview?.substring(0, 120) || "";
+  })
   return NextResponse.json({
     articles,
     total,

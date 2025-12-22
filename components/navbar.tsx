@@ -18,34 +18,39 @@ export function Navbar() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-[hsl(var(--background))]/95 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60">
-      <div className="container mx-auto max-w-6xl flex h-14 items-center px-4">
+    <header className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))]/50 bg-[hsl(var(--background))]/80 backdrop-blur-xl">
+      <div className="container mx-auto max-w-6xl flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 mr-8">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
+        <Link
+          href="/"
+          className="flex items-center gap-3 group"
+        >
+          <div className="relative h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25 transition-transform duration-200 group-hover:scale-105">
             <BookOpen className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-lg hidden sm:inline">知乎内容库</span>
+          <span className="font-semibold text-lg hidden sm:inline bg-gradient-to-r from-[hsl(var(--foreground))] to-[hsl(var(--muted-foreground))] bg-clip-text text-transparent">
+            知乎内容库
+          </span>
         </Link>
 
         {/* Nav Links */}
-        <nav className="flex items-center gap-1 flex-1">
+        <nav className="flex items-center gap-1 bg-[hsl(var(--muted))]/50 rounded-full p-1">
           {navItems.map(item => {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
               <Link key={item.href} href={item.href}>
-                <Button
-                  variant={isActive ? "default" : "ghost"}
-                  size="sm"
+                <button
                   className={cn(
-                    "gap-2",
-                    isActive && "bg-[hsl(var(--secondary))]"
+                    "relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "text-[hsl(var(--foreground))] bg-[hsl(var(--background))] shadow-sm"
+                      : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                   )}
                 >
                   <Icon className="h-4 w-4" />
                   <span className="hidden sm:inline">{item.label}</span>
-                </Button>
+                </button>
               </Link>
             )
           })}
@@ -56,12 +61,18 @@ export function Navbar() {
           variant="ghost"
           size="sm"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="rounded-full w-9 h-9 p-0 hover:bg-[hsl(var(--muted))]"
         >
-          {theme === "dark" ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
+          <div className="relative">
+            <Sun className={cn(
+              "h-4 w-4 transition-all duration-300",
+              theme === "dark" ? "rotate-0 scale-100" : "rotate-90 scale-0"
+            )} />
+            <Moon className={cn(
+              "h-4 w-4 absolute inset-0 transition-all duration-300",
+              theme === "dark" ? "-rotate-90 scale-0" : "rotate-0 scale-100"
+            )} />
+          </div>
         </Button>
       </div>
     </header>

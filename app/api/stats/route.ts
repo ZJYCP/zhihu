@@ -30,22 +30,14 @@ export async function GET() {
     }),
   ]);
 
-  // 按天统计最近7天 - 使用 Prisma 查询代替原生 SQL
-  const weekArticlesData = await prisma.crawlTask.findMany({
-    where: { status: "COMPLETED", createdAt: { gte: weekAgo } },
-    select: { createdAt: true },
-  });
-
-  // 手动按天分组
-  const dailyMap = new Map<string, number>();
-  weekArticlesData.forEach((item) => {
-    const date = item.createdAt.toISOString().split("T")[0];
-    dailyMap.set(date, (dailyMap.get(date) || 0) + 1);
-  });
-
-  const dailyStats = Array.from(dailyMap.entries())
-    .map(([date, count]) => ({ date, count }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  // 按天统计最近7天 - 使用原生 SQL 在数据库端分组
+  const dailyStats = await prisma.$queryRaw<{ date: string; count: bigint }[]>`
+    SELECT DATE("createdAt") as date, COUNT(*) as count
+    FROM "CrawlTask"
+    WHERE status = 'COMPLETED' AND "createdAt" >= ${weekAgo}
+    GROUP BY DATE("createdAt")
+    ORDER BY date
+  `.then(rows => rows.map(row => ({ date: row.date, count: Number(row.count) })));
 
   return NextResponse.json({
     totalArticles,
