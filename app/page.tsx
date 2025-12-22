@@ -15,6 +15,7 @@ import {
   Clock,
 } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface Article {
   id: string;
@@ -333,34 +334,38 @@ export default function Home() {
         </div>
       ) : articles.length > 0 ? (
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {articles.map((article) => (
               <Link key={article.id} href={`/tasks/${article.id}`}>
-                <Card className="h-full hover:shadow-lg transition-all hover:border-blue-300 dark:hover:border-blue-700 cursor-pointer group hover:-translate-y-1">
-                  <CardContent className="p-4 flex flex-col h-full">
-                    <h3 className="font-medium line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors text-sm">
+                <Card className="h-full group cursor-pointer overflow-hidden border-transparent bg-[hsl(var(--muted))]/30 hover:bg-[hsl(var(--muted))]/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1">
+                  <CardContent className="p-5 flex flex-col h-full">
+                    {/* 顶部装饰条 */}
+                    <div className="h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 mb-4 group-hover:w-20 transition-all duration-300" />
+
+                    <h3 className="font-semibold line-clamp-2 mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-relaxed">
                       {article.title || "无标题"}
                     </h3>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))] line-clamp-3 flex-1 mb-3">
-                      {article.content_preview?.slice(0, 100)}...
+
+                    <p className="text-sm text-[hsl(var(--muted-foreground))] line-clamp-3 flex-1 mb-4 leading-relaxed">
+                      {article.content_preview?.slice(0, 120)}...
                     </p>
-                    <div className="flex items-center justify-between pt-2 border-t border-[hsl(var(--border))]">
-                      <p className="text-xs text-[hsl(var(--muted-foreground))] truncate flex-1">
-                        {article.author && <span className="font-medium">{article.author}</span>}
-                        {article.author && " · "}
+
+                    <div className="flex items-center gap-3 pt-3 border-t border-[hsl(var(--border))]/50">
+                      {article.author && (
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                            <span className="text-xs text-white font-medium">
+                              {article.author.charAt(0)}
+                            </span>
+                          </div>
+                          <span className="text-sm font-medium text-[hsl(var(--foreground))]/80">
+                            {article.author}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-xs text-[hsl(var(--muted-foreground))] ml-auto">
                         {formatDate(article.createdAt)}
-                      </p>
-                      {/* <Button
-                        size="sm"
-                        variant="ghost"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 shrink-0"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          deleteArticle(article.id);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button> */}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -370,23 +375,50 @@ export default function Home() {
 
           {/* 分页 */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-6">
+            <div className="flex items-center justify-center gap-1 pt-8">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 disabled={page === 1}
                 onClick={() => fetchArticles(page - 1, searchQuery)}
+                className="rounded-full px-4"
               >
                 上一页
               </Button>
-              <span className="text-sm text-[hsl(var(--muted-foreground))] px-4">
-                {page} / {totalPages}
-              </span>
+              <div className="flex items-center gap-1 mx-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => fetchArticles(pageNum, searchQuery)}
+                      className={cn(
+                        "h-8 w-8 rounded-full text-sm font-medium transition-all",
+                        page === pageNum
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25"
+                          : "text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]"
+                      )}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 disabled={page === totalPages}
                 onClick={() => fetchArticles(page + 1, searchQuery)}
+                className="rounded-full px-4"
               >
                 下一页
               </Button>
