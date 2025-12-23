@@ -17,12 +17,21 @@ export function Navbar() {
     { href: "/settings", label: "设置", icon: Settings },
   ]
 
+  // 点击当前页面链接时刷新
+  const handleClick = (e: React.MouseEvent, href: string) => {
+    if (pathname === href) {
+      e.preventDefault()
+      window.location.href = href
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))]/50 bg-[hsl(var(--background))]/80 backdrop-blur-xl">
       <div className="container mx-auto max-w-6xl flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link
           href="/"
+          onClick={(e) => handleClick(e, "/")}
           className="flex items-center gap-3 group"
         >
           <div className="relative h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25 transition-transform duration-200 group-hover:scale-105">
@@ -39,7 +48,11 @@ export function Navbar() {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
-              <Link key={item.href} href={item.href}>
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={(e) => handleClick(e, item.href)}
+              >
                 <button
                   className={cn(
                     "relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
