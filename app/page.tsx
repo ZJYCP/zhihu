@@ -274,7 +274,7 @@ export default function Home() {
       return (
         <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />
-          暂不支持此 URL 格式，仅支持 paid_column/xxx/section/xxx
+          暂不支持此 URL 格式，仅支持 https://www.zhihu.com/market/paid_column/***/section/****
         </p>
       );
     }
@@ -560,7 +560,7 @@ export default function Home() {
                       key={pageNum}
                       onClick={() => handlePageChange(pageNum)}
                       className={cn(
-                        "h-8 w-8 rounded-full text-sm font-medium transition-all",
+                        "h-8 w-8 rounded-full text-sm font-medium transition-all cursor-pointer",
                         page === pageNum
                           ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25"
                           : "text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]"

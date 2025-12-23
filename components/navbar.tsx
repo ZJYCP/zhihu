@@ -38,7 +38,7 @@ export function Navbar() {
             <BookOpen className="h-5 w-5 text-white" />
           </div>
           <span className="font-semibold text-lg hidden sm:inline bg-gradient-to-r from-[hsl(var(--foreground))] to-[hsl(var(--muted-foreground))] bg-clip-text text-transparent">
-            知乎内容库
+            拾盐记
           </span>
         </Link>
 
@@ -51,11 +51,11 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={(e) => handleClick(e, item.href)}
+                // onClick={(e) => handleClick(e, item.href)}
               >
                 <button
                   className={cn(
-                    "relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                    "relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer",
                     isActive
                       ? "text-[hsl(var(--foreground))] bg-[hsl(var(--background))] shadow-sm"
                       : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"

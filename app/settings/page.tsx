@@ -48,7 +48,7 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `知乎内容库导出_${new Date().toISOString().split("T")[0]}.md`;
+      link.download = `拾盐记内容导出_${new Date().toISOString().split("T")[0]}.md`;
       link.click();
       URL.revokeObjectURL(url);
     } finally {
@@ -77,30 +77,30 @@ export default function SettingsPage() {
               <p className="text-sm text-[hsl(var(--muted-foreground))]">
                 选择界面主题
               </p>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <Button
                   variant={theme === "light" ? "default" : "outline"}
                   onClick={() => setTheme("light")}
-                  className="flex-1"
+                  className="flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4"
                 >
-                  <Sun className="h-4 w-4 mr-2" />
-                  浅色
+                  <Sun className="h-4 w-4 shrink-0" />
+                  <span className="hidden sm:inline">浅色</span>
                 </Button>
                 <Button
                   variant={theme === "dark" ? "default" : "outline"}
                   onClick={() => setTheme("dark")}
-                  className="flex-1"
+                  className="flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4"
                 >
-                  <Moon className="h-4 w-4 mr-2" />
-                  深色
+                  <Moon className="h-4 w-4 shrink-0" />
+                  <span className="hidden sm:inline">深色</span>
                 </Button>
                 <Button
                   variant={theme === "system" ? "default" : "outline"}
                   onClick={() => setTheme("system")}
-                  className="flex-1"
+                  className="flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4"
                 >
-                  <Monitor className="h-4 w-4 mr-2" />
-                  跟随系统
+                  <Monitor className="h-4 w-4 shrink-0" />
+                  <span className="hidden sm:inline">跟随系统</span>
                 </Button>
               </div>
             </div>
@@ -108,7 +108,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* 数据管理 */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle className="text-lg">数据管理</CardTitle>
           </CardHeader>
@@ -163,7 +163,7 @@ export default function SettingsPage() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* 关于 */}
         <Card>
@@ -172,9 +172,34 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
-              <p>知乎内容库 v2.0</p>
+              <p>拾盐记 v1.0</p>
               <p>基于 Next.js 15 + Prisma + PostgreSQL 构建</p>
-              <p>使用 Playwright 进行内容采集</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 免责声明 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              免责声明
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-sm text-[hsl(var(--muted-foreground))]">
+              <p>
+                本工具仅供个人学习和研究使用，请勿用于任何商业用途。
+              </p>
+              <p>
+                用户在使用本工具时应遵守相关法律法规，尊重原创作者的知识产权。所采集的内容版权归原作者所有。
+              </p>
+              <p>
+                本工具不对用户的任何行为承担责任，因使用本工具产生的任何法律纠纷由用户自行承担。
+              </p>
+              <p>
+                如有侵权，请联系删除。
+              </p>
             </div>
           </CardContent>
         </Card>
