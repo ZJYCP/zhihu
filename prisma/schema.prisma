@@ -23,6 +23,7 @@ model CrawlTask {
 
 @@index([status, createdAt])
 @@index([status])
+@@index([url])
 }
 
 enum Status {
