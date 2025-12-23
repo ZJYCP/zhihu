@@ -3,6 +3,40 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { ExportButtons } from "./export-buttons";
+import { cache } from "react";
+
+// 启用动态缓存，页面在首次访问后会被缓存 60 秒
+export const revalidate = 60;
+
+// 使用 React cache 缓存数据库查询（同一请求内去重）
+const getArticle = cache(async (id: string) => {
+  return prisma.crawlTask.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      author: true,
+      url: true,
+      status: true,
+      createdAt: true,
+      // 不查询 html, content_preview, error 等不需要的字段
+    },
+  });
+});
+
+// 生成页面元数据
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const article = await getArticle(id);
+  return {
+    title: article?.title || "文章详情",
+  };
+}
 
 export default async function ArticlePage({
   params,
@@ -10,7 +44,7 @@ export default async function ArticlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const article = await prisma.crawlTask.findUnique({ where: { id } });
+  const article = await getArticle(id);
 
   if (!article || article.status !== "COMPLETED") {
     notFound();
