@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio"
-import { CrawlerConfig } from "./config"
+import { CrawlerConfig, parseZhihuUrl } from "./config"
 import {
   extractFontBase64,
   decodeFontMapping,
@@ -31,7 +31,72 @@ export class ZhihuCrawler {
   async close(): Promise<void> {}
 
   async crawl(url: string): Promise<CrawlResult> {
-    // 直接请求页面
+    const parsed = parseZhihuUrl(url)
+
+    if (parsed.type === "question") {
+      return this.crawlQuestion(url)
+    }
+
+    return this.crawlPaidColumn(url)
+  }
+
+  // 爬取问答页面
+  private async crawlQuestion(url: string): Promise<CrawlResult> {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": this.config.userAgent || USER_AGENT,
+        Cookie: this.config.cookie,
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        Referer: "https://www.zhihu.com/",
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`请求失败: ${response.status} ${response.statusText}`)
+    }
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    // 提取标题 - 在 .QuestionHeader-title
+    const title =
+      $(".QuestionHeader-title").first().text().trim() ||
+      $("title").text().trim() ||
+      `未知标题_${Date.now()}`
+
+    // 提取作者 - 在 .AuthorInfo-name 里的 a 标签
+    const author =
+      $(".AuthorInfo-name a").first().text().trim() || undefined
+
+    // 提取内容 - 在 .RichContent-inner 里面的 p 标签
+    const contentEl = $(".RichContent-inner").first()
+    const rawHtml = contentEl.html() || ""
+
+    // 提取文本内容 - 移除不需要的元素
+    const contentClone = contentEl.clone()
+    // 移除 style、script、noscript 等非内容元素
+    contentClone.find("style, script, noscript, svg, button").remove()
+    // 为块级元素添加换行
+    contentClone
+      .find("p, div, br, h1, h2, h3, h4, h5, h6, li, blockquote")
+      .each((_, el) => {
+        $(el).append("\n")
+      })
+    // 提取文本并清理 CSS 类名残留（形如 .css-xxx）
+    const content = contentClone
+      .text()
+      .replace(/\.css-[\w-]+\{[^}]*\}/g, "") // 移除内联 CSS 规则
+      .replace(/\.css-[\w-]+/g, "") // 移除 CSS 类名引用
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
+
+    return { title, content, html: rawHtml, author, url }
+  }
+
+  // 爬取付费专栏页面（原有逻辑）
+  private async crawlPaidColumn(url: string): Promise<CrawlResult> {
     const response = await fetch(url, {
       headers: {
         "User-Agent": this.config.userAgent || USER_AGENT,

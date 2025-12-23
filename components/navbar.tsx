@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
-import { BookOpen, Settings, Sun, Moon, BarChart3 } from "lucide-react"
+import { BookOpen, Sparkle, Sun, Moon, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function Navbar() {
@@ -14,8 +14,16 @@ export function Navbar() {
   const navItems = [
     { href: "/", label: "内容库", icon: BookOpen },
     { href: "/stats", label: "统计", icon: BarChart3 },
-    { href: "/settings", label: "设置", icon: Settings },
+    { href: "/about", label: "关于", icon: Sparkle },
   ]
+
+  // 点击当前页面链接时刷新
+  const handleClick = (e: React.MouseEvent, href: string) => {
+    if (pathname === href) {
+      e.preventDefault()
+      window.location.href = href
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))]/50 bg-[hsl(var(--background))]/80 backdrop-blur-xl">
@@ -23,13 +31,14 @@ export function Navbar() {
         {/* Logo */}
         <Link
           href="/"
+          onClick={(e) => handleClick(e, "/")}
           className="flex items-center gap-3 group"
         >
           <div className="relative h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25 transition-transform duration-200 group-hover:scale-105">
             <BookOpen className="h-5 w-5 text-white" />
           </div>
           <span className="font-semibold text-lg hidden sm:inline bg-gradient-to-r from-[hsl(var(--foreground))] to-[hsl(var(--muted-foreground))] bg-clip-text text-transparent">
-            知乎内容库
+            拾盐记
           </span>
         </Link>
 
@@ -39,10 +48,14 @@ export function Navbar() {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
-              <Link key={item.href} href={item.href}>
+              <Link
+                key={item.href}
+                href={item.href}
+                // onClick={(e) => handleClick(e, item.href)}
+              >
                 <button
                   className={cn(
-                    "relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                    "relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer",
                     isActive
                       ? "text-[hsl(var(--foreground))] bg-[hsl(var(--background))] shadow-sm"
                       : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"

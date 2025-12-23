@@ -5,7 +5,7 @@ import { Navbar } from "@/components/navbar";
 import NextTopLoader from "nextjs-toploader";
 
 export const metadata: Metadata = {
-  title: "知乎内容库",
+  title: "拾盐记",
   description: "知乎付费专栏内容采集与管理工具",
 };
 

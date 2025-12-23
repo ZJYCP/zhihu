@@ -56,7 +56,6 @@ function StatCard({
 }
 
 function SimpleBarChart({ data }: { data: { date: string; count: number }[] }) {
-  const maxCount = Math.max(...data.map((d) => d.count), 1);
   const days = ["日", "一", "二", "三", "四", "五", "六"];
 
   // 填充最近7天
@@ -65,13 +64,16 @@ function SimpleBarChart({ data }: { data: { date: string; count: number }[] }) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split("T")[0];
-    const found = data.find((d) => d.date === dateStr);
+    // API 返回的 date 是 ISO 格式，需要截取日期部分比较
+    const found = data.find((d) => d.date.split("T")[0] === dateStr);
     last7Days.push({
       date: dateStr,
       count: found?.count || 0,
       day: days[date.getDay()],
     });
   }
+
+  const maxCount = Math.max(...last7Days.map((d) => d.count), 1);
 
   return (
     <div className="flex items-end justify-between gap-2 h-32">

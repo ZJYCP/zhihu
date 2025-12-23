@@ -1,0 +1,172 @@
+"use client";
+
+import Image from "next/image";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertTriangle,
+  Smartphone,
+  Monitor,
+  Globe,
+  Copy,
+  ChevronRight,
+} from "lucide-react";
+
+export default function AboutPage() {
+  return (
+    <main className="container mx-auto max-w-4xl p-6">
+      <h1 className="text-3xl font-bold mb-8">关于</h1>
+
+      <div className="space-y-6">
+        {/* 如何获取链接 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">如何获取文章链接</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* 手机端 */}
+            <div>
+              <h3 className="font-medium flex items-center gap-2 mb-3">
+                <Smartphone className="h-4 w-4" />
+                手机端（知乎 App）
+              </h3>
+              <p>注意：通过知乎 app 的分享功能的【复制链接】得到的网址无法提取内容，请使用以下两种方式</p>
+              <div className="space-y-4 text-sm text-[hsl(var(--muted-foreground))]">
+                {/* 方法一 */}
+                <div className="p-4 rounded-lg bg-[hsl(var(--muted))]/50">
+                  <p className="font-medium text-[hsl(var(--foreground))] mb-2">
+                    方法一：通过微信获取
+                  </p>
+                  <ol className="space-y-2 list-decimal list-inside">
+                    <li className="flex items-start gap-2">
+                      <span className="shrink-0">1.</span>
+                      <span>在知乎 App 中打开文章，点击右上角「分享」图标</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="shrink-0">2.</span>
+                      <span>选择「微信好友」</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="shrink-0">3.</span>
+                      <span>在微信中打开分享的链接</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="shrink-0">4.</span>
+                      <span>点击微信浏览器右上角「...」，选择「复制链接」</span>
+                    </li>
+                  </ol>
+                  {/* 微信截图 */}
+                  <div className="mt-3 flex justify-center">
+                    <Image
+                      src="/images/wechat.png"
+                      alt="微信浏览器复制链接示意图"
+                      width={280}
+                      height={500}
+                      className="rounded-lg border border-[hsl(var(--border))] shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* 方法二 */}
+                <div className="p-4 rounded-lg bg-[hsl(var(--muted))]/50">
+                  <p className="font-medium text-[hsl(var(--foreground))] mb-2">
+                    方法二：通过浏览器获取
+                  </p>
+                  <ol className="space-y-2 list-decimal list-inside">
+                    <li className="flex items-start gap-2">
+                      <span className="shrink-0">1.</span>
+                      <span>在知乎 App 中打开文章，点击右上角「分享」按钮</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="shrink-0">2.</span>
+                      <span>在微信、QQ 等一排中选择最右侧的「更多」，然后选择一个浏览器打开</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="shrink-0">3.</span>
+                      <span>在浏览器地址栏中复制完整链接</span>
+                    </li>
+                  </ol>
+                  {/* 图片占位 */}
+                  <div className="mt-3 p-8 border-2 border-dashed border-[hsl(var(--border))] rounded-lg text-center text-[hsl(var(--muted-foreground))]">
+                    <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-xs">示意图，暂时没有，聪明的你一定知道在哪里</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 电脑端 */}
+            <div>
+              <h3 className="font-medium flex items-center gap-2 mb-3">
+                <Monitor className="h-4 w-4" />
+                电脑端
+              </h3>
+              <div className="p-4 rounded-lg bg-[hsl(var(--muted))]/50 text-sm text-[hsl(var(--muted-foreground))]">
+                <p>直接在浏览器地址栏复制当前页面的链接即可。</p>
+                <div className="mt-3 flex items-center gap-2 p-2 rounded bg-[hsl(var(--background))] font-mono text-xs">
+                  <Copy className="h-3 w-3 shrink-0" />
+                  <span className="truncate">https://www.zhihu.com/question/xxx/answer/xxx</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 支持的链接格式 */}
+            <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50">
+              <p className="font-medium text-blue-700 dark:text-blue-300 mb-2">
+                支持的链接格式
+              </p>
+              <ul className="space-y-1 text-sm text-blue-600 dark:text-blue-400">
+                <li className="flex items-center gap-2">
+                  <ChevronRight className="h-3 w-3" />
+                  <span>问答链接：zhihu.com/question/xxx/answer/xxx</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <ChevronRight className="h-3 w-3" />
+                  <span>付费专栏：zhihu.com/market/paid_column/xxx/section/xxx</span>
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 关于 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">关于拾盐记</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
+              <p>拾盐记 v1.0</p>
+              <p>基于 Next.js 15 + Prisma + PostgreSQL 构建</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 免责声明 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              免责声明
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-sm text-[hsl(var(--muted-foreground))]">
+              <p>
+                本工具仅供个人学习和研究使用，请勿用于任何商业用途。
+              </p>
+              <p>
+                用户在使用本工具时应遵守相关法律法规，尊重原创作者的知识产权。所采集的内容版权归原作者所有。
+              </p>
+              <p>
+                本工具不对用户的任何行为承担责任，因使用本工具产生的任何法律纠纷由用户自行承担。
+              </p>
+              <p>
+                如有侵权，请联系删除。
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
+}

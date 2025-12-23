@@ -71,16 +71,20 @@ export default async function ArticlePage({
         {article.author && <span>{article.author}</span>}
         {article.author && <span>·</span>}
         <span>{article.createdAt.toLocaleDateString("zh-CN")}</span>
-        <span>·</span>
-        <a
-          href={article.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-blue-500 hover:underline"
-        >
-          查看原文
-          <ExternalLink className="h-3 w-3" />
-        </a>
+        {article.url.startsWith("http") && (
+          <>
+            <span>·</span>
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-blue-500 hover:underline"
+            >
+              查看原文
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </>
+        )}
       </div>
 
       {/* 分割线 */}
