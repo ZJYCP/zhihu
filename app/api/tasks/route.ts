@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-// 清理 URL，去除查询参数
-function cleanZhihuUrl(url: string): string | null {
-  const match = url.match(
-    /https?:\/\/(?:www\.)?zhihu\.com\/market\/paid_column\/(\d+)\/section\/(\d+)/
-  );
-  if (match) {
-    return `https://www.zhihu.com/market/paid_column/${match[1]}/section/${match[2]}`;
-  }
-  return null;
-}
+import { cleanZhihuUrl } from "@/lib/crawler";
 
 // GET /api/tasks - 获取任务列表
 export async function GET(request: NextRequest) {

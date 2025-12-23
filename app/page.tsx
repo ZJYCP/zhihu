@@ -49,11 +49,18 @@ function getInputType(text: string): InputType {
 
   // 检查是否像 URL
   if (trimmed.includes("zhihu.com") || trimmed.startsWith("http")) {
-    // 检查是否是支持的格式
-    const match = trimmed.match(
+    // 检查是否是付费专栏格式
+    const paidColumnMatch = trimmed.match(
       /https?:\/\/(?:www\.)?zhihu\.com\/market\/paid_column\/(\d+)\/section\/(\d+)/
     );
-    if (match) {
+    if (paidColumnMatch) {
+      return "valid_url";
+    }
+    // 检查是否是问答格式
+    const questionMatch = trimmed.match(
+      /https?:\/\/(?:www\.)?zhihu\.com\/question\/(\d+)\/answer\/(\d+)/
+    );
+    if (questionMatch) {
       return "valid_url";
     }
     return "invalid_url";
@@ -64,11 +71,19 @@ function getInputType(text: string): InputType {
 
 // 清理 URL，去除查询参数
 function cleanZhihuUrl(text: string): string {
-  const match = text.match(
+  // 付费专栏格式
+  const paidColumnMatch = text.match(
     /https?:\/\/(?:www\.)?zhihu\.com\/market\/paid_column\/(\d+)\/section\/(\d+)/
   );
-  if (match) {
-    return `https://www.zhihu.com/market/paid_column/${match[1]}/section/${match[2]}`;
+  if (paidColumnMatch) {
+    return `https://www.zhihu.com/market/paid_column/${paidColumnMatch[1]}/section/${paidColumnMatch[2]}`;
+  }
+  // 问答格式
+  const questionMatch = text.match(
+    /https?:\/\/(?:www\.)?zhihu\.com\/question\/(\d+)\/answer\/(\d+)/
+  );
+  if (questionMatch) {
+    return `https://www.zhihu.com/question/${questionMatch[1]}/answer/${questionMatch[2]}`;
   }
   return text;
 }
@@ -274,7 +289,7 @@ export default function Home() {
       return (
         <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />
-          暂不支持此 URL 格式，仅支持 https://www.zhihu.com/market/paid_column/***/section/****
+          暂不支持此 URL 格式，支持付费专栏和问答链接
         </p>
       );
     }
@@ -282,7 +297,7 @@ export default function Home() {
     if (inputType === "valid_url") {
       return (
         <p className="text-xs text-blue-600 mt-2">
-          检测到知乎付费专栏 URL，点击搜索查找或爬取
+          检测到知乎 URL，点击搜索查找或爬取
         </p>
       );
     }

@@ -1,2 +1,2 @@
 export { ZhihuCrawler, type CrawlResult } from "./crawler";
-export { getCrawlerConfig, parseZhihuUrl } from "./config";
+export { getCrawlerConfig, parseZhihuUrl, cleanZhihuUrl } from "./config";

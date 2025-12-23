@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
-import { BookOpen, Settings, Sun, Moon, BarChart3 } from "lucide-react"
+import { BookOpen, Sparkle, Sun, Moon, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function Navbar() {
@@ -14,7 +14,7 @@ export function Navbar() {
   const navItems = [
     { href: "/", label: "内容库", icon: BookOpen },
     { href: "/stats", label: "统计", icon: BarChart3 },
-    { href: "/settings", label: "设置", icon: Settings },
+    { href: "/about", label: "关于", icon: Sparkle },
   ]
 
   // 点击当前页面链接时刷新
