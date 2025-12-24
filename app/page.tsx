@@ -288,12 +288,13 @@ export default function Home() {
     if (inputType === "invalid_url") {
       return (
         <p className="text-xs text-amber-600 mt-2 flex gap-1 break-all">
-          <AlertCircle className="h-3 w-3" />
-          暂不支持此 URL 格式，支持付费专栏和问答链接<br></br>
-          例如：https://www.zhihu.com/question/xxx/answer/xxx <br/>
-          https://www.zhihu.com/market/paid_column/xxx/section/xxx
-
-          
+          <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />
+          <span>
+            暂不支持此 URL 格式，支持付费专栏和问答链接。
+            <Link href="/about" className="text-blue-500 hover:underline ml-1">
+              如何获取链接？
+            </Link>
+          </span>
         </p>
       );
     }
