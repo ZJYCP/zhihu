@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { ExportButtons } from "./export-buttons";
 import { cache } from "react";
+import type { Metadata } from "next";
 
 // 启用动态缓存，页面在首次访问后会被缓存 60 秒
 export const revalidate = 60;
@@ -30,11 +31,22 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
-}) {
+}): Promise<Metadata> {
   const { id } = await params;
   const article = await getArticle(id);
+
+  const title = article?.title || "文章详情";
+  const description = article?.content?.slice(0, 150) || "查看文章详情";
+
   return {
-    title: article?.title || "文章详情",
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      authors: article?.author ? [article.author] : undefined,
+    },
   };
 }
 
