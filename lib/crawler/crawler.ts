@@ -60,6 +60,22 @@ export class ZhihuCrawler {
     const html = await response.text()
     const $ = cheerio.load(html)
 
+    // 提取字体 CSS - 问答页面字体在第一个 @font-face
+    let fontMapping: FontMapping = {}
+    const styleContent = $("style").text()
+    const fontFaceMatches = styleContent.match(/@font-face\s*\{[^}]+\}/g) || []
+
+    if (fontFaceMatches.length >= 1) {
+      const base64Font = extractFontBase64(fontFaceMatches[0]!)
+      if (base64Font) {
+        try {
+          fontMapping = await decodeFontMapping(base64Font)
+        } catch (e) {
+          console.error("字体解码失败:", e)
+        }
+      }
+    }
+
     // 提取标题 - 在 .QuestionHeader-title
     const title =
       $(".QuestionHeader-title").first().text().trim() ||
@@ -85,12 +101,18 @@ export class ZhihuCrawler {
         $(el).append("\n")
       })
     // 提取文本并清理 CSS 类名残留（形如 .css-xxx）
-    const content = contentClone
+    const rawText = contentClone
       .text()
       .replace(/\.css-[\w-]+\{[^}]*\}/g, "") // 移除内联 CSS 规则
       .replace(/\.css-[\w-]+/g, "") // 移除 CSS 类名引用
       .replace(/\n{3,}/g, "\n\n")
       .trim()
+
+    // 字体解码
+    const content =
+      Object.keys(fontMapping).length > 0
+        ? decodeText(rawText, fontMapping)
+        : rawText
 
     return { title, content, html: rawHtml, author, url }
   }
