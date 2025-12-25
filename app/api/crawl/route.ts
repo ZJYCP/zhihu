@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     data: { status: "RUNNING" },
   });
 
-  const config = getCrawlerConfig();
+  const config = await getCrawlerConfig();
   const crawler = new ZhihuCrawler(config);
 
   try {

@@ -21,9 +21,9 @@ model CrawlTask {
   updatedAt       DateTime @updatedAt
   content_preview String?  @default(dbgenerated("\"left\"(content, 600)"))
 
-@@index([status, createdAt])
-@@index([status])
-@@index([url])
+  @@index([status, createdAt])
+  @@index([status])
+  @@index([url])
 }
 
 enum Status {
@@ -31,4 +31,22 @@ enum Status {
   RUNNING
   COMPLETED
   FAILED
+}
+
+// 系统配置表（存储 Cookie 等配置）
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// Cookie 可用性检查日志
+model CookieCheckLog {
+  id        String   @id @default(cuid())
+  success   Boolean
+  message   String?
+  checkedAt DateTime @default(now())
+
+  @@index([checkedAt])
 }
