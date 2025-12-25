@@ -6,8 +6,14 @@ import { ExportButtons } from "./export-buttons";
 import { cache } from "react";
 import type { Metadata } from "next";
 
-// 启用动态缓存，页面在首次访问后会被缓存 60 秒
-export const revalidate = 60;
+// SSG 配置：允许访问未预生成的页面，首次访问时生成并永久缓存
+export const dynamicParams = true;
+
+// 构建时不预生成任何页面，全部按需生成
+// 如果想预生成部分热门文章，可以在这里返回 id 列表
+export async function generateStaticParams() {
+  return [];
+}
 
 // 使用 React cache 缓存数据库查询（同一请求内去重）
 const getArticle = cache(async (id: string) => {
@@ -21,7 +27,6 @@ const getArticle = cache(async (id: string) => {
       url: true,
       status: true,
       createdAt: true,
-      // 不查询 html, content_preview, error 等不需要的字段
     },
   });
 });
