@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { ExportButtons } from "./export-buttons";
+import { BackButton } from "./back-button";
 import { cache } from "react";
 import type { Metadata } from "next";
 
@@ -70,13 +70,7 @@ export default async function ArticlePage({
   return (
     <main className="container mx-auto max-w-3xl p-6">
       {/* 导航 */}
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] mb-8"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        返回列表
-      </Link>
+      <BackButton />
 
       {/* 标题 */}
       <h1 className="text-3xl font-bold mb-4 leading-tight">

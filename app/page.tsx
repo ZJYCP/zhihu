@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -98,21 +99,37 @@ function formatDate(dateStr: string): string {
 }
 
 export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // 从 URL 参数初始化状态
+  const initialPage = Number(searchParams.get("page")) || 1;
+  const initialSearch = searchParams.get("q") || "";
+
   const [input, setInput] = useState("");
   const [articles, setArticles] = useState<Article[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [initialLoading, setInitialLoading] = useState(true);
   // 是否处于爬取模式（不显示搜索提示）
   const [crawlingUrl, setCrawlingUrl] = useState<string | null>(null);
 
   const inputType = getInputType(input);
   const hasRunningTask = tasks.some((t) => t.status === "RUNNING");
+
+  // 更新 URL 参数（不刷新页面）
+  const updateUrl = useCallback((newPage: number, newSearch: string) => {
+    const params = new URLSearchParams();
+    if (newPage > 1) params.set("page", String(newPage));
+    if (newSearch) params.set("q", newSearch);
+    const queryString = params.toString();
+    router.replace(queryString ? `/?${queryString}` : "/", { scroll: false });
+  }, [router]);
 
   // 获取统计数据
   const fetchStats = useCallback(async () => {
@@ -142,10 +159,14 @@ export default function Home() {
 
   // 初始化加载
   useEffect(() => {
-    Promise.all([fetchArticles(1, ""), fetchStats()]).finally(() => {
+    const isUrlSearch = initialSearch.includes("zhihu.com");
+    Promise.all([
+      fetchArticles(initialPage, initialSearch, isUrlSearch),
+      fetchStats()
+    ]).finally(() => {
       setInitialLoading(false);
     });
-  }, [fetchArticles, fetchStats]);
+  }, [fetchArticles, fetchStats, initialPage, initialSearch]);
 
   // 提交搜索
   const handleSubmit = async () => {
@@ -168,6 +189,7 @@ export default function Home() {
         // 已存在，展示搜索结果
         setSearchQuery(cleanUrl);
         setInput("");
+        updateUrl(1, cleanUrl);
         return;
       }
 
@@ -207,6 +229,7 @@ export default function Home() {
         // 爬取成功，获取文章
         await fetchArticles(1, cleanUrl, true);
         setSearchQuery(cleanUrl);
+        updateUrl(1, cleanUrl);
         fetchStats();
         setTasks((prev) => prev.filter((t) => t.id !== task.id));
       } else {
@@ -223,6 +246,7 @@ export default function Home() {
       setLoading(true);
       setSearchQuery(trimmedInput);
       await fetchArticles(1, trimmedInput);
+      updateUrl(1, trimmedInput);
       setLoading(false);
     }
   };
@@ -246,6 +270,7 @@ export default function Home() {
     if (res.ok) {
       setSearchQuery(task.url);
       await fetchArticles(1, task.url, true);
+      updateUrl(1, task.url);
       fetchStats();
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
     } else {
@@ -271,6 +296,7 @@ export default function Home() {
     setSearchQuery("");
     setLoading(true);
     await fetchArticles(1, "");
+    updateUrl(1, "");
     setLoading(false);
   };
 
@@ -278,6 +304,7 @@ export default function Home() {
   const handlePageChange = async (newPage: number) => {
     setLoading(true);
     await fetchArticles(newPage, searchQuery, searchQuery.includes("zhihu.com"));
+    updateUrl(newPage, searchQuery);
     setLoading(false);
   };
 
