@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,6 +99,20 @@ function formatDate(dateStr: string): string {
 }
 
 export default function Home() {
+  return (
+    <Suspense fallback={
+      <main className="container mx-auto max-w-6xl px-4 py-6">
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--muted-foreground))]" />
+        </div>
+      </main>
+    }>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
