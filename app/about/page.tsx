@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -9,14 +10,107 @@ import {
   Globe,
   Copy,
   ChevronRight,
+  Activity,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react"
 
+interface CookieStatus {
+  latest: {
+    success: boolean
+    message: string
+    checkedAt: string
+  } | null
+  successRate: number
+  logs: { success: boolean; checkedAt: string }[]
+}
+
 export default function AboutPage() {
+  const [cookieStatus, setCookieStatus] = useState<CookieStatus | null>(null)
+
+  useEffect(() => {
+    fetch("/api/admin/cookie-status")
+      .then((res) => res.json())
+      .then((data) => setCookieStatus(data))
+      .catch(() => {})
+  }, [])
+
   return (
     <main className="container mx-auto max-w-4xl p-6">
       <h1 className="text-3xl font-bold mb-8">关于</h1>
 
       <div className="space-y-6">
+        {/* 服务状态 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              服务状态
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {cookieStatus ? (
+              <div className="space-y-4">
+                {/* 当前状态 */}
+                <div className="flex items-center gap-3">
+                  {cookieStatus.latest?.success ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  )}
+                  <div>
+                    <p className="font-medium">
+                      采集服务
+                      <span
+                        className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                          cookieStatus.latest?.success
+                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                            : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                        }`}
+                      >
+                        {cookieStatus.latest?.success ? "正常" : "异常"}
+                      </span>
+                    </p>
+                    {cookieStatus.latest && (
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                        最近检查：
+                        {new Date(cookieStatus.latest.checkedAt).toLocaleString("zh-CN")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 24 小时状态时间线 */}
+                {cookieStatus.logs.length > 0 && (
+                  <div>
+                    <p className="text-sm text-[hsl(var(--muted-foreground))] mb-2">
+                      最近 24 小时状态 · 成功率 {cookieStatus.successRate}%
+                    </p>
+                    <div className="flex gap-1 flex-wrap">
+                      {cookieStatus.logs
+                        .slice()
+                        .reverse()
+                        .map((log, i) => (
+                          <div
+                            key={i}
+                            className={`w-3 h-8 rounded-sm ${
+                              log.success ? "bg-green-500" : "bg-red-500"
+                            }`}
+                            title={`${new Date(log.checkedAt).toLocaleString("zh-CN")} - ${
+                              log.success ? "正常" : "异常"
+                            }`}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-[hsl(var(--muted-foreground))]">加载中...</p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* 如何获取链接 */}
         <Card>
           <CardHeader>
@@ -24,7 +118,7 @@ export default function AboutPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-                                  {/* 支持的链接格式 */}
+            {/* 支持的链接格式 */}
             <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50">
               <p className="font-medium text-blue-700 dark:text-blue-300 mb-2">
                 支持的链接格式
@@ -48,8 +142,8 @@ export default function AboutPage() {
                 <Smartphone className="h-4 w-4" />
                 手机端（知乎 App）
               </h3>
-              <p>
-                注意：通过知乎 app
+              <p className="text-sm text-[hsl(var(--muted-foreground))] mb-3">
+                注意：通过知乎 App
                 的分享功能的【复制链接】得到的网址无法提取内容，请使用以下两种方式
               </p>
               <div className="space-y-4 text-sm text-[hsl(var(--muted-foreground))]">
@@ -72,7 +166,9 @@ export default function AboutPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="shrink-0">3.</span>
-                      <span><b>稍等片刻</b>，在浏览器地址栏中复制完整链接即可</span>
+                      <span>
+                        <b>稍等片刻</b>，在浏览器地址栏中复制完整链接即可
+                      </span>
                     </li>
                   </ol>
                   {/* 图片占位 */}
