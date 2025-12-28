@@ -21,7 +21,7 @@ export async function GET() {
       message = "未配置 Cookie";
     } else {
       // 请求知乎 API 检查 Cookie 有效性
-      const response = await fetch("https://www.zhihu.com/api/v4/creator/apply", {
+      const response = await fetch("https://www.zhihu.com/question/55860326/answer/2056067197", {
         headers: {
           "User-Agent": USER_AGENT,
           Cookie: cookie,
