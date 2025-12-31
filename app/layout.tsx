@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import NextTopLoader from "nextjs-toploader";
+import { Toaster } from "sonner";
 
 const siteConfig = {
   name: "拾盐记",
@@ -67,6 +68,7 @@ export default function RootLayout({
         <ThemeProvider>
           <Navbar />
           {children}
+          <Toaster richColors position="top-center" />
         </ThemeProvider>
       </body>
     </html>

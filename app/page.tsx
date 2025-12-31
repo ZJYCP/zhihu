@@ -14,11 +14,12 @@ import {
   TrendingUp,
   Clock,
   AlertCircle,
-  CheckCircle2,
   Download,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { apiGet, apiPost, apiDelete } from "@/lib/api-client";
 
 interface Article {
   id: string;
@@ -39,6 +40,25 @@ interface Task {
 interface Stats {
   totalArticles: number;
   weekArticles: number;
+}
+
+interface ArticlesResponse {
+  articles: Article[];
+  total: number;
+  totalPages: number;
+}
+
+interface TaskResponse {
+  id: string;
+  url: string;
+  existing?: boolean;
+  article?: Article;
+}
+
+interface CrawlResponse {
+  id: string;
+  status: string;
+  error?: string;
 }
 
 // 判断输入类型
@@ -147,9 +167,10 @@ function HomeContent() {
 
   // 获取统计数据
   const fetchStats = useCallback(async () => {
-    const res = await fetch("/api/stats");
-    const data = await res.json();
-    setStats({ totalArticles: data.totalArticles, weekArticles: data.weekArticles });
+    const result = await apiGet<Stats>("/api/stats", false);
+    if (result.success) {
+      setStats({ totalArticles: result.data.totalArticles, weekArticles: result.data.weekArticles });
+    }
   }, []);
 
   // 获取文章列表
@@ -160,13 +181,15 @@ function HomeContent() {
         params.set("search", search);
         if (searchByUrl) params.set("type", "url");
       }
-      const res = await fetch(`/api/articles?${params}`);
-      const data = await res.json();
-      setArticles(data.articles);
-      setTotalPages(data.totalPages);
-      setTotal(data.total);
-      setPage(p);
-      return data;
+      const result = await apiGet<ArticlesResponse>(`/api/articles?${params}`, false);
+      if (result.success) {
+        setArticles(result.data.articles);
+        setTotalPages(result.data.totalPages);
+        setTotal(result.data.total);
+        setPage(p);
+        return result.data;
+      }
+      return { articles: [], total: 0, totalPages: 1 };
     },
     []
   );
@@ -211,15 +234,16 @@ function HomeContent() {
       setCrawlingUrl(cleanUrl);
       setSearchQuery(""); // 清除搜索提示
 
-      const taskRes = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: cleanUrl }),
-      });
-      const task = await taskRes.json();
+      const taskResult = await apiPost<TaskResponse>("/api/tasks", { url: cleanUrl });
+      if (!taskResult.success) {
+        setCrawlingUrl(null);
+        return;
+      }
+
+      const task = taskResult.data;
 
       // 如果返回了已存在的文章（后端二次检查）
-      if (task.existing) {
+      if (task.existing && task.article) {
         setArticles([task.article]);
         setTotal(1);
         setTotalPages(1);
@@ -233,24 +257,20 @@ function HomeContent() {
       setTasks((prev) => [{ id: task.id, url: cleanUrl, status: "RUNNING", error: null }, ...prev]);
 
       // 开始爬取
-      const crawlRes = await fetch("/api/crawl", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskId: task.id }),
-      });
+      const crawlResult = await apiPost<CrawlResponse>("/api/crawl", { taskId: task.id }, false);
 
-      if (crawlRes.ok) {
-        // 爬取成功，获取文章
+      if (crawlResult.success) {
+        // 爬取成功
+        toast.success("文章爬取成功");
         await fetchArticles(1, cleanUrl, true);
         setSearchQuery(cleanUrl);
         updateUrl(1, cleanUrl);
         fetchStats();
         setTasks((prev) => prev.filter((t) => t.id !== task.id));
       } else {
-        const err = await crawlRes.json();
         setTasks((prev) =>
           prev.map((t) =>
-            t.id === task.id ? { ...t, status: "FAILED", error: err.error } : t
+            t.id === task.id ? { ...t, status: "FAILED", error: crawlResult.error } : t
           )
         );
       }
@@ -275,23 +295,19 @@ function HomeContent() {
       prev.map((t) => (t.id === taskId ? { ...t, status: "RUNNING", error: null } : t))
     );
 
-    const res = await fetch("/api/crawl", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ taskId }),
-    });
+    const result = await apiPost<CrawlResponse>("/api/crawl", { taskId }, false);
 
-    if (res.ok) {
+    if (result.success) {
+      toast.success("文章爬取成功");
       setSearchQuery(task.url);
       await fetchArticles(1, task.url, true);
       updateUrl(1, task.url);
       fetchStats();
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
     } else {
-      const err = await res.json();
       setTasks((prev) =>
         prev.map((t) =>
-          t.id === taskId ? { ...t, status: "FAILED", error: err.error } : t
+          t.id === taskId ? { ...t, status: "FAILED", error: result.error } : t
         )
       );
     }
@@ -300,8 +316,10 @@ function HomeContent() {
 
   // 删除任务
   const deleteTask = async (taskId: string) => {
-    await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
-    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    const result = await apiDelete(`/api/tasks/${taskId}`, undefined, false);
+    if (result.success) {
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    }
   };
 
   // 清除搜索

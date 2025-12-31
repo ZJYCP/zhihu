@@ -9,15 +9,14 @@ import {
   Trash2,
   Edit,
   RefreshCw,
-  Check,
   X,
   Save,
   Settings,
   FileText,
-  AlertCircle,
-  CheckCircle2,
   Lock,
 } from "lucide-react";
+import { toast } from "sonner";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 
 interface Article {
   id: string;
@@ -29,6 +28,11 @@ interface Article {
   createdAt: string;
 }
 
+interface ArticlesResponse {
+  articles: Article[];
+  totalPages: number;
+}
+
 interface CookieStatus {
   latest: {
     success: boolean;
@@ -37,6 +41,15 @@ interface CookieStatus {
   } | null;
   successRate: number;
   logs: { success: boolean; checkedAt: string }[];
+}
+
+interface ConfigResponse {
+  key: string;
+  value: string;
+}
+
+interface AuthResponse {
+  token: string;
 }
 
 const AUTH_KEY = "admin_token";
@@ -61,23 +74,13 @@ export default function AdminPage() {
     e.preventDefault();
     setError("");
 
-    try {
-      const res = await fetch("/api/admin/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+    const result = await apiPost<AuthResponse>("/api/admin/auth", { password }, false);
 
-      const data = await res.json();
-
-      if (res.ok && data.token) {
-        localStorage.setItem(AUTH_KEY, data.token);
-        setIsAuthenticated(true);
-      } else {
-        setError(data.error || "登录失败");
-      }
-    } catch {
-      setError("网络错误");
+    if (result.success && result.data.token) {
+      localStorage.setItem(AUTH_KEY, result.data.token);
+      setIsAuthenticated(true);
+    } else {
+      setError(result.success ? "登录失败" : result.error);
     }
   };
 
@@ -186,10 +189,11 @@ function ArticleManager() {
       limit: "20",
       search,
     });
-    const res = await fetch(`/api/admin/articles?${params}`);
-    const data = await res.json();
-    setArticles(data.articles);
-    setTotalPages(data.totalPages);
+    const result = await apiGet<ArticlesResponse>(`/api/admin/articles?${params}`, false);
+    if (result.success) {
+      setArticles(result.data.articles);
+      setTotalPages(result.data.totalPages);
+    }
     setLoading(false);
   }, [page, search]);
 
@@ -205,20 +209,22 @@ function ArticleManager() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除这篇文章吗？")) return;
-    await fetch(`/api/admin/articles/${id}`, { method: "DELETE" });
-    fetchArticles();
+    const result = await apiDelete(`/api/admin/articles/${id}`);
+    if (result.success) {
+      toast.success("文章已删除");
+      fetchArticles();
+    }
   };
 
   const handleBatchDelete = async () => {
     if (selectedIds.size === 0) return;
     if (!confirm(`确定删除选中的 ${selectedIds.size} 篇文章吗？`)) return;
-    await fetch("/api/admin/articles", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: Array.from(selectedIds) }),
-    });
-    setSelectedIds(new Set());
-    fetchArticles();
+    const result = await apiDelete<{ deleted: number }>("/api/admin/articles", { ids: Array.from(selectedIds) });
+    if (result.success) {
+      toast.success(`已删除 ${result.data.deleted} 篇文章`);
+      setSelectedIds(new Set());
+      fetchArticles();
+    }
   };
 
   const startEdit = (article: Article) => {
@@ -231,13 +237,12 @@ function ArticleManager() {
 
   const saveEdit = async () => {
     if (!editingId) return;
-    await fetch(`/api/admin/articles/${editingId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editData),
-    });
-    setEditingId(null);
-    fetchArticles();
+    const result = await apiPut(`/api/admin/articles/${editingId}`, editData);
+    if (result.success) {
+      toast.success("保存成功");
+      setEditingId(null);
+      fetchArticles();
+    }
   };
 
   const toggleSelect = (id: string) => {
@@ -451,38 +456,40 @@ function SettingsManager() {
 
   useEffect(() => {
     // 获取当前配置
-    fetch("/api/admin/config?key=zhihu_cookie")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.value) setCookie(data.value);
-      });
+    apiGet<ConfigResponse>("/api/admin/config?key=zhihu_cookie", false).then((result) => {
+      if (result.success && result.data?.value) {
+        setCookie(result.data.value);
+      }
+    });
 
     // 获取 Cookie 状态
     fetchCookieStatus();
   }, []);
 
   const fetchCookieStatus = async () => {
-    const res = await fetch("/api/admin/cookie-status");
-    const data = await res.json();
-    setCookieStatus(data);
+    const result = await apiGet<CookieStatus>("/api/admin/cookie-status", false);
+    if (result.success) {
+      setCookieStatus(result.data);
+    }
   };
 
   const saveCookie = async () => {
     setSaving(true);
-    await fetch("/api/admin/config", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: "zhihu_cookie", value: cookie }),
-    });
+    const result = await apiPost("/api/admin/config", { key: "zhihu_cookie", value: cookie });
     setSaving(false);
-    alert("保存成功");
+    if (result.success) {
+      toast.success("Cookie 保存成功");
+    }
   };
 
   const checkCookieNow = async () => {
     setChecking(true);
-    await fetch("/api/cron/check-cookie");
+    const result = await apiGet("/api/cron/check-cookie", false);
     await fetchCookieStatus();
     setChecking(false);
+    if (result.success) {
+      toast.success("Cookie 检查完成");
+    }
   };
 
   return (
