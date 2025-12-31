@@ -657,7 +657,7 @@ function HomeContent() {
             {searchQuery ? "未找到匹配的文章" : ""}
           </p>
           <p className="text-sm text-[hsl(var(--muted-foreground))] mb-6">
-            {searchQuery ? "尝试其他关键词" : ""}
+            {searchQuery ? "尝试其他关键词，建议直接使用文章链接进行采集" : ""}
           </p>
         </div>
       ): null}
