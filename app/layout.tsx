@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar";
 import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "sonner";
 
 const siteConfig = {
   name: "拾盐记",
@@ -69,6 +70,7 @@ export default function RootLayout({
         <ThemeProvider>
           <Navbar />
           {children}
+          <Toaster richColors position="top-center" />
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
+import { handleApiError } from "@/lib/api-error";
 
 // 缓存统计数据，60 秒过期
 const getCachedStats = unstable_cache(
@@ -56,6 +57,10 @@ const getCachedStats = unstable_cache(
 
 // GET /api/stats - 获取统计数据
 export async function GET() {
-  const stats = await getCachedStats();
-  return NextResponse.json(stats);
+  try {
+    const stats = await getCachedStats();
+    return NextResponse.json(stats);
+  } catch (error) {
+    return handleApiError(error, "获取统计数据失败");
+  }
 }
