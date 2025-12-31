@@ -1,46 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
 
 // GET /api/admin/config - 获取配置
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const key = searchParams.get("key");
+  try {
+    const { searchParams } = new URL(request.url);
+    const key = searchParams.get("key");
 
-  if (key) {
-    const config = await prisma.systemConfig.findUnique({
-      where: { key },
-    });
-    return NextResponse.json(config);
+    if (key) {
+      const config = await prisma.systemConfig.findUnique({
+        where: { key },
+      });
+      return NextResponse.json(config);
+    }
+
+    // 返回所有配置（隐藏敏感值）
+    const configs = await prisma.systemConfig.findMany();
+    return NextResponse.json(
+      configs.map((c) => ({
+        ...c,
+        value: c.key === "zhihu_cookie" ? maskCookie(c.value) : c.value,
+      }))
+    );
+  } catch (error) {
+    return handleApiError(error, "获取配置失败");
   }
-
-  // 返回所有配置（隐藏敏感值）
-  const configs = await prisma.systemConfig.findMany();
-  return NextResponse.json(
-    configs.map((c) => ({
-      ...c,
-      value: c.key === "zhihu_cookie" ? maskCookie(c.value) : c.value,
-    }))
-  );
 }
 
 // POST /api/admin/config - 更新配置
 export async function POST(request: NextRequest) {
-  const { key, value } = await request.json();
+  try {
+    const body = await safeParseJson<{ key?: string; value?: string }>(request);
 
-  if (!key || value === undefined) {
-    return NextResponse.json({ error: "key 和 value 不能为空" }, { status: 400 });
+    if (!body) {
+      return errorResponse("请求体格式错误", 400, "JSON_PARSE_ERROR");
+    }
+
+    const { key, value } = body;
+
+    if (!key || value === undefined) {
+      return errorResponse("key 和 value 不能为空", 400);
+    }
+
+    const config = await prisma.systemConfig.upsert({
+      where: { key },
+      update: { value },
+      create: { key, value },
+    });
+
+    return NextResponse.json({
+      ...config,
+      value: key === "zhihu_cookie" ? maskCookie(config.value) : config.value,
+    });
+  } catch (error) {
+    return handleApiError(error, "更新配置失败");
   }
-
-  const config = await prisma.systemConfig.upsert({
-    where: { key },
-    update: { value },
-    create: { key, value },
-  });
-
-  return NextResponse.json({
-    ...config,
-    value: key === "zhihu_cookie" ? maskCookie(config.value) : config.value,
-  });
 }
 
 // 隐藏 Cookie 中间部分

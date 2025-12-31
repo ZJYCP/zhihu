@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { handleApiError } from "@/lib/api-error";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
-// GET /api/cron/check-cookie - 检查 Cookie 可用性（供 Vercel Cron 调用）
+// GET /api/cron/check-cookie - 检查 Cookie 可用性
 export async function GET() {
   let success = false;
   let message = "";
@@ -41,17 +42,22 @@ export async function GET() {
     message = error instanceof Error ? error.message : "检查失败";
   }
 
-  // 记录检查结果
-  await prisma.cookieCheckLog.create({
-    data: { success, message },
-  });
+  // 记录检查结果到数据库
+  try {
+    await prisma.cookieCheckLog.create({
+      data: { success, message },
+    });
 
-  // 清理 7 天前的日志
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  await prisma.cookieCheckLog.deleteMany({
-    where: { checkedAt: { lt: sevenDaysAgo } },
-  });
+    // 清理 7 天前的日志
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    await prisma.cookieCheckLog.deleteMany({
+      where: { checkedAt: { lt: sevenDaysAgo } },
+    });
+  } catch (dbError) {
+    // 数据库操作失败时，返回错误但仍包含检查结果
+    return handleApiError(dbError, "保存检查结果失败");
+  }
 
   return NextResponse.json({ success, message, checkedAt: new Date() });
 }

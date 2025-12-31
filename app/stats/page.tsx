@@ -10,6 +10,7 @@ import {
   Clock,
 } from "lucide-react";
 import Link from "next/link";
+import { apiGet } from "@/lib/api-client";
 
 interface Stats {
   totalArticles: number;
@@ -102,14 +103,17 @@ function SimpleBarChart({ data }: { data: { date: string; count: number }[] }) {
 export default function StatsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/stats")
-      .then((res) => res.json())
-      .then((data) => {
-        setStats(data);
-        setLoading(false);
-      });
+    apiGet<Stats>("/api/stats", false).then((result) => {
+      if (result.success) {
+        setStats(result.data);
+      } else {
+        setError(result.error);
+      }
+      setLoading(false);
+    });
   }, []);
 
   if (loading) {
@@ -126,6 +130,21 @@ export default function StatsPage() {
             </Card>
           ))}
         </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="container mx-auto max-w-6xl p-6">
+        <h1 className="text-3xl font-bold mb-8">统计</h1>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+            <p className="text-lg font-medium mb-2">加载失败</p>
+            <p className="text-[hsl(var(--muted-foreground))]">{error}</p>
+          </CardContent>
+        </Card>
       </main>
     );
   }
