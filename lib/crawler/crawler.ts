@@ -16,6 +16,7 @@ export interface CrawlResult {
   html: string
   author?: string
   url: string
+  fontDecodeSuccess: boolean // 字体解码是否成功
 }
 
 export class ZhihuCrawler {
@@ -62,6 +63,7 @@ export class ZhihuCrawler {
 
     // 提取字体 CSS - 问答页面字体在第一个 @font-face
     let fontMapping: FontMapping = {}
+    let fontDecodeSuccess = true // 默认成功（包括没有自定义字体的情况）
     const styleContent = $("style").text()
     const fontFaceMatches = styleContent.match(/@font-face\s*\{[^}]+\}/g) || []
 
@@ -72,6 +74,7 @@ export class ZhihuCrawler {
           fontMapping = await decodeFontMapping(base64Font)
         } catch (e) {
           console.error("字体解码失败:", e)
+          fontDecodeSuccess = false
         }
       }
     }
@@ -114,7 +117,7 @@ export class ZhihuCrawler {
         ? decodeText(rawText, fontMapping)
         : rawText
 
-    return { title, content, html: rawHtml, author, url }
+    return { title, content, html: rawHtml, author, url, fontDecodeSuccess }
   }
 
   // 爬取付费专栏页面（原有逻辑）
@@ -139,6 +142,7 @@ export class ZhihuCrawler {
 
     // 提取字体 CSS
     let fontMapping: FontMapping = {}
+    let fontDecodeSuccess = true // 默认成功（包括没有自定义字体的情况）
     const styleContent = $("style").text()
     const fontFaceMatches = styleContent.match(/@font-face\s*\{[^}]+\}/g) || []
 
@@ -176,6 +180,7 @@ export class ZhihuCrawler {
           fontMapping = await decodeFontMapping(base64Font)
         } catch (e) {
           console.error("字体解码失败:", e)
+          fontDecodeSuccess = false
         }
       }
     }
@@ -185,6 +190,6 @@ export class ZhihuCrawler {
         ? decodeText(rawText, fontMapping)
         : rawText
 
-    return { title, content, html: rawHtml, author, url }
+    return { title, content, html: rawHtml, author, url, fontDecodeSuccess }
   }
 }
