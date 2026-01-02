@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
           content: result.content,
           html: result.html,
           author: result.author,
+          fontDecodeSuccess: result.fontDecodeSuccess,
         },
       });
 

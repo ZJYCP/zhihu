@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, AlertTriangle } from "lucide-react";
 import { ExportButtons } from "./export-buttons";
 import { BackButton } from "./back-button";
 import { cache } from "react";
@@ -27,6 +27,7 @@ const getArticle = cache(async (id: string) => {
       url: true,
       status: true,
       createdAt: true,
+      fontDecodeSuccess: true,
     },
   });
 });
@@ -71,6 +72,14 @@ export default async function ArticlePage({
     <main className="container mx-auto max-w-3xl p-6">
       {/* 导航 */}
       <BackButton />
+
+      {/* 字体解码失败警告 */}
+      {article.fontDecodeSuccess === false && (
+        <div className="flex items-center gap-2 p-4 mb-6 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200">
+          <AlertTriangle className="h-5 w-5 shrink-0" />
+          <span>字体解码失败，文章内容可能存在乱码，请查看原文获取完整内容。</span>
+        </div>
+      )}
 
       {/* 标题 */}
       <h1 className="text-3xl font-bold mb-4 leading-tight">
