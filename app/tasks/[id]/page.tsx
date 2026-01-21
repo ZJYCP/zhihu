@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ExternalLink, AlertTriangle } from "lucide-react";
 import { ExportButtons } from "./export-buttons";
 import { BackButton } from "./back-button";
+import { RecrawlButton } from "./recrawl-button";
 import { cache } from "react";
 import type { Metadata } from "next";
 
@@ -70,8 +71,11 @@ export default async function ArticlePage({
 
   return (
     <main className="container mx-auto max-w-3xl p-6">
-      {/* 导航 */}
-      <BackButton />
+      {/* 顶部导航栏 */}
+      <div className="flex items-center justify-between mb-6">
+        <BackButton />
+        <RecrawlButton taskId={article.id} />
+      </div>
 
       {/* 字体解码失败警告 */}
       {article.fontDecodeSuccess === false && (
