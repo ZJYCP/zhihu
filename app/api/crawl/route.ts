@@ -2,9 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ZhihuCrawler, getCrawlerConfig, parseZhihuUrl } from "@/lib/crawler";
 import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
 // POST /api/crawl - 执行爬取
 export async function POST(request: NextRequest) {
+  // IP 限流检查
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ||
+             request.headers.get("x-real-ip") ||
+             "unknown";
+  const { allowed, remaining } = await checkRateLimit(ip);
+
+  if (!allowed) {
+    return errorResponse("请求过于频繁，请稍后再试", 429, "RATE_LIMIT_EXCEEDED");
+  }
+
   let taskId: string | undefined;
 
   try {

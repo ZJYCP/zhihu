@@ -51,3 +51,12 @@ model CookieCheckLog {
 
   @@index([checkedAt])
 }
+
+// IP 限流记录
+model RateLimitLog {
+  id        String   @id @default(cuid())
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+}
