@@ -183,7 +183,7 @@ export default function AboutPage() {
                 {/* 方法二 */}
                 <div className="p-4 rounded-lg bg-[hsl(var(--muted))]/50">
                   <p className="font-medium text-[hsl(var(--foreground))] mb-2">
-                    方法二：通过微信获取
+                    <s>方法二：通过微信获取</s> 可能存在获取文章不完整的情况，推荐用方法一
                   </p>
                   <ol className="space-y-2 list-decimal list-inside">
                     <li className="flex items-start gap-2">
