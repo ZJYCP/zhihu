@@ -1,18 +1,18 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 
 export function BackButton() {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleBack = () => {
     // 检查是否有历史记录可以后退
     if (window.history.length > 1) {
-      router.back();
+      window.history.back();
     } else {
       // 没有历史记录时跳转到首页
-      router.push("/");
+      navigate({ to: "/" });
     }
   };
 

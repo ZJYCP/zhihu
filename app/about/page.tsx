@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
+import { createFileRoute } from "@tanstack/react-router"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   AlertTriangle,
@@ -25,7 +25,17 @@ interface CookieStatus {
   logs: { success: boolean; checkedAt: string }[]
 }
 
-export default function AboutPage() {
+export const Route = createFileRoute("/about/")({
+  head: () => ({
+    meta: [
+      { title: "关于 | 拾盐记" },
+      { name: "description", content: "了解拾盐记的服务状态、使用方式和免责声明" },
+    ],
+  }),
+  component: AboutPage,
+})
+
+function AboutPage() {
   const [cookieStatus, setCookieStatus] = useState<CookieStatus | null>(null)
 
   useEffect(() => {
@@ -205,7 +215,7 @@ export default function AboutPage() {
                   </ol>
                   {/* 微信截图 */}
                   <div className="mt-3 flex justify-center">
-                    <Image
+                    <img
                       src="/images/wechat.png"
                       alt="微信浏览器复制链接示意图"
                       width={280}

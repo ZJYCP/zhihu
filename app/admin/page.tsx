@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +55,18 @@ interface AuthResponse {
 
 const AUTH_KEY = "admin_token";
 
-export default function AdminPage() {
+export const Route = createFileRoute("/admin/")({
+  head: () => ({
+    meta: [
+      { title: "管理后台 | 拾盐记" },
+      { name: "description", content: "拾盐记内容采集管理后台" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
+  component: AdminPage,
+});
+
+function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

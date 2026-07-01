@@ -16,6 +16,7 @@ export default defineConfig({
       srcDirectory: ".",
       router: {
         routesDirectory: "app",
+        indexToken: "page",
       },
     }),
     viteReact(),

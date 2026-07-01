@@ -9,27 +9,123 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './app/__root'
+import { Route as PageRouteImport } from './app/page'
+import { Route as StatsPageRouteImport } from './app/stats/page'
+import { Route as AdminPageRouteImport } from './app/admin/page'
+import { Route as AboutPageRouteImport } from './app/about/page'
+import { Route as TasksIdPageRouteImport } from './app/tasks/$id/page'
 
-export interface FileRoutesByFullPath {}
-export interface FileRoutesByTo {}
+const PageRoute = PageRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatsPageRoute = StatsPageRouteImport.update({
+  id: '/stats/',
+  path: '/stats/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPageRoute = AdminPageRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutPageRoute = AboutPageRouteImport.update({
+  id: '/about/',
+  path: '/about/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksIdPageRoute = TasksIdPageRouteImport.update({
+  id: '/tasks/$id/',
+  path: '/tasks/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
+export interface FileRoutesByFullPath {
+  '/': typeof PageRoute
+  '/about/': typeof AboutPageRoute
+  '/admin/': typeof AdminPageRoute
+  '/stats/': typeof StatsPageRoute
+  '/tasks/$id/': typeof TasksIdPageRoute
+}
+export interface FileRoutesByTo {
+  '/': typeof PageRoute
+  '/about': typeof AboutPageRoute
+  '/admin': typeof AdminPageRoute
+  '/stats': typeof StatsPageRoute
+  '/tasks/$id': typeof TasksIdPageRoute
+}
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof PageRoute
+  '/about/': typeof AboutPageRoute
+  '/admin/': typeof AdminPageRoute
+  '/stats/': typeof StatsPageRoute
+  '/tasks/$id/': typeof TasksIdPageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: never
+  fullPaths: '/' | '/about/' | '/admin/' | '/stats/' | '/tasks/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: never
-  id: '__root__'
+  to: '/' | '/about' | '/admin' | '/stats' | '/tasks/$id'
+  id: '__root__' | '/' | '/about/' | '/admin/' | '/stats/' | '/tasks/$id/'
   fileRoutesById: FileRoutesById
 }
-export interface RootRouteChildren {}
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {}
+export interface RootRouteChildren {
+  PageRoute: typeof PageRoute
+  AboutPageRoute: typeof AboutPageRoute
+  AdminPageRoute: typeof AdminPageRoute
+  StatsPageRoute: typeof StatsPageRoute
+  TasksIdPageRoute: typeof TasksIdPageRoute
 }
 
-const rootRouteChildren: RootRouteChildren = {}
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof PageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats/': {
+      id: '/stats/'
+      path: '/stats'
+      fullPath: '/stats/'
+      preLoaderRoute: typeof StatsPageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminPageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/': {
+      id: '/about/'
+      path: '/about'
+      fullPath: '/about/'
+      preLoaderRoute: typeof AboutPageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks/$id/': {
+      id: '/tasks/$id/'
+      path: '/tasks/$id'
+      fullPath: '/tasks/$id/'
+      preLoaderRoute: typeof TasksIdPageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  PageRoute: PageRoute,
+  AboutPageRoute: AboutPageRoute,
+  AdminPageRoute: AdminPageRoute,
+  StatsPageRoute: StatsPageRoute,
+  TasksIdPageRoute: TasksIdPageRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()

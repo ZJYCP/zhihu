@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
 
-export function RecrawlButton({ taskId }: { taskId: string }) {
+export function RecrawlButton({
+  taskId,
+  onRecrawled,
+}: {
+  taskId: string;
+  onRecrawled: () => Promise<void>;
+}) {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleRecrawl = async () => {
     if (!confirm("确定要重新爬取这篇文章吗？")) return;
@@ -24,7 +28,7 @@ export function RecrawlButton({ taskId }: { taskId: string }) {
         throw new Error(error.error || "爬取失败");
       }
 
-      router.refresh();
+      await onRecrawled();
       alert("重新爬取成功！");
     } catch (error) {
       alert(error instanceof Error ? error.message : "重新爬取失败");

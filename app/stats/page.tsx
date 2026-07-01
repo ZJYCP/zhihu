@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   FileText,
@@ -9,7 +10,6 @@ import {
   AlertCircle,
   Clock,
 } from "lucide-react";
-import Link from "next/link";
 import { apiGet } from "@/lib/api-client";
 
 interface Stats {
@@ -20,6 +20,16 @@ interface Stats {
   recentArticles: { id: string; title: string; createdAt: string }[];
   dailyStats: { date: string; count: number }[];
 }
+
+export const Route = createFileRoute("/stats/")({
+  head: () => ({
+    meta: [
+      { title: "统计 | 拾盐记" },
+      { name: "description", content: "查看知乎文章采集统计数据和最近采集记录" },
+    ],
+  }),
+  component: StatsPage,
+});
 
 function StatCard({
   title,
@@ -100,7 +110,7 @@ function SimpleBarChart({ data }: { data: { date: string; count: number }[] }) {
   );
 }
 
-export default function StatsPage() {
+function StatsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -209,7 +219,8 @@ export default function StatsPage() {
                 {stats.recentArticles.map((article) => (
                   <Link
                     key={article.id}
-                    href={`/tasks/${article.id}`}
+                    to="/tasks/$id"
+                    params={{ id: article.id }}
                     className="block p-3 rounded-lg hover:bg-[hsl(var(--muted))] transition-colors"
                   >
                     <p className="font-medium line-clamp-1">
