@@ -8,9 +8,14 @@ const packageLock = JSON.parse(readFileSync("package-lock.json", "utf8"));
 const dockerfile = readFileSync("Dockerfile", "utf8");
 const compose = readFileSync("docker-compose.yml", "utf8");
 const dockerignore = readFileSync(".dockerignore", "utf8");
+const readme = readFileSync("README.md", "utf8");
 const migrationLock = readFileSync("prisma/migrations/migration_lock.toml", "utf8");
 const currentSchemaMigration = readFileSync(
-  "prisma/migrations/20260701000000_init_current_schema/migration.sql",
+  "prisma/migrations/20260701000000_baseline_existing_schema/migration.sql",
+  "utf8",
+);
+const feedbackMigration = readFileSync(
+  "prisma/migrations/20260701001000_add_article_feedback/migration.sql",
   "utf8",
 );
 
@@ -63,6 +68,11 @@ assert.equal(
   "prisma migrate deploy",
   "package scripts should expose Prisma production migration deployment",
 );
+assert.equal(
+  packageJson.scripts?.["db:migrate:baseline"],
+  "prisma migrate resolve --applied 20260701000000_baseline_existing_schema",
+  "package scripts should expose a one-time baseline command for existing production databases",
+);
 assert.match(
   packageJson.scripts?.["start:prod"] ?? "",
   /prisma migrate deploy[\s\S]*node \.output\/server\/index\.mjs/,
@@ -85,23 +95,42 @@ assert.match(
   "runtime image should include Prisma schema and migrations for production migrate deploy",
 );
 assert.ok(
-  existsSync("prisma/migrations/20260701000000_init_current_schema/migration.sql"),
-  "repository should include a committed Prisma migration for the current schema",
+  existsSync("prisma/migrations/20260701000000_baseline_existing_schema/migration.sql"),
+  "repository should include a committed baseline migration for existing deployments",
+);
+assert.ok(
+  existsSync("prisma/migrations/20260701001000_add_article_feedback/migration.sql"),
+  "repository should include a committed incremental migration for article feedback",
 );
 assert.match(
   currentSchemaMigration,
   /"content_preview" TEXT/,
-  "initial migration should create content_preview as a regular text column",
+  "baseline migration should describe content_preview as a regular text column",
 );
 assert.doesNotMatch(
   currentSchemaMigration,
   /"content_preview" TEXT DEFAULT .*content/,
-  "initial migration must not use an invalid PostgreSQL default expression that references another column",
+  "baseline migration must not use an invalid PostgreSQL default expression that references another column",
 );
 assert.match(
   currentSchemaMigration,
   /CREATE OR REPLACE FUNCTION "set_crawl_task_content_preview"/,
-  "initial migration should maintain content_preview through a database trigger",
+  "baseline migration should document the content_preview trigger for new databases",
+);
+assert.doesNotMatch(
+  currentSchemaMigration,
+  /ArticleFeedback|FeedbackStatus|FeedbackType/,
+  "baseline migration must not include feedback objects that need to be applied after baselining existing databases",
+);
+assert.match(
+  feedbackMigration,
+  /CREATE TYPE "FeedbackStatus"/,
+  "feedback migration should create the feedback status enum",
+);
+assert.match(
+  feedbackMigration,
+  /CREATE TABLE IF NOT EXISTS "ArticleFeedback"/,
+  "feedback migration should create the feedback table independently from the baseline",
 );
 assert.match(
   migrationLock,
@@ -122,6 +151,16 @@ assert.doesNotMatch(
   compose,
   /db:push/,
   "Compose deployment should not require manual db:push",
+);
+assert.match(
+  readme,
+  /P3005[\s\S]*db:migrate:baseline/,
+  "README should document how to baseline an existing non-empty production database",
+);
+assert.match(
+  readme,
+  /npm run db:migrate:deploy && npm run build/,
+  "README should document Vercel's migration-aware build command",
 );
 
 assert.match(
