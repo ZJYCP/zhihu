@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
+import { requireAdminRequest } from "@/lib/admin-auth";
 
 // GET /api/admin/config - 获取配置
 export async function GET(request: NextRequest) {
   try {
+    const authError = requireAdminRequest(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const key = searchParams.get("key");
 
@@ -31,6 +35,9 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/config - 更新配置
 export async function POST(request: NextRequest) {
   try {
+    const authError = requireAdminRequest(request);
+    if (authError) return authError;
+
     const body = await safeParseJson<{ key?: string; value?: string }>(request);
 
     if (!body) {

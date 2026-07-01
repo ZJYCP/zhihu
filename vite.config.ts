@@ -20,6 +20,8 @@ export default defineConfig({
       },
     }),
     viteReact(),
-    nitro(),
+    nitro({
+      noExternals: true,
+    }),
   ],
 });

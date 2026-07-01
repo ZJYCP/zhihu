@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
+import { requireAdminRequest } from "@/lib/admin-auth";
 
 // GET /api/admin/articles - 获取文章列表（支持搜索和分页）
 export async function GET(request: NextRequest) {
   try {
+    const authError = requireAdminRequest(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
@@ -59,6 +63,9 @@ export async function GET(request: NextRequest) {
 // DELETE /api/admin/articles - 批量删除文章
 export async function DELETE(request: NextRequest) {
   try {
+    const authError = requireAdminRequest(request);
+    if (authError) return authError;
+
     const body = await safeParseJson<{ ids?: string[] }>(request);
 
     if (!body) {

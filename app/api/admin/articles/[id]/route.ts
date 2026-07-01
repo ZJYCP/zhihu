@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
+import { requireAdminRequest } from "@/lib/admin-auth";
 
 // GET /api/admin/articles/[id] - 获取单个文章详情
 export async function GET(
@@ -8,6 +9,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authError = requireAdminRequest(request);
+    if (authError) return authError;
+
     const { id } = await params;
 
     const article = await prisma.crawlTask.findUnique({
@@ -30,6 +34,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authError = requireAdminRequest(request);
+    if (authError) return authError;
+
     const { id } = await params;
     const body = await safeParseJson<Record<string, unknown>>(request);
 
@@ -68,6 +75,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authError = requireAdminRequest(request);
+    if (authError) return authError;
+
     const { id } = await params;
 
     await prisma.crawlTask.delete({ where: { id } });

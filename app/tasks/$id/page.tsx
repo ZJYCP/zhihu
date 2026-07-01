@@ -7,6 +7,7 @@ import { ExportButtons } from "./-export-buttons";
 import { BackButton } from "./-back-button";
 import { RecrawlButton } from "./-recrawl-button";
 import { apiGet } from "@/lib/api-client";
+import { getArticleForDetail } from "./-article.functions";
 
 interface Article {
   id: string;
@@ -20,28 +21,49 @@ interface Article {
 }
 
 export const Route = createFileRoute("/tasks/$id/")({
+  loader: ({ params }) => getArticleForDetail({ data: { id: params.id } }),
+  head: ({ loaderData }) => {
+    const title = loaderData?.title || "文章详情";
+    const description = loaderData?.content?.slice(0, 150) || "查看文章详情";
+
+    return {
+      meta: [
+        { title: `${title} | 拾盐记` },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "article" },
+        ...(loaderData?.author
+          ? [{ property: "article:author", content: loaderData.author }]
+          : []),
+      ],
+    };
+  },
   component: ArticlePage,
 });
 
 function ArticlePage() {
   const { id } = Route.useParams();
-  const [article, setArticle] = useState<Article | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialArticle = Route.useLoaderData();
+  const [article, setArticle] = useState<Article | null>(initialArticle);
+  const [loading, setLoading] = useState(false);
   const [missing, setMissing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchArticle = useCallback(async (cancelled?: () => boolean) => {
+  const fetchArticle = useCallback(async () => {
     setLoading(true);
     setError(null);
     setMissing(false);
 
     try {
       const result = await apiGet<Article>(`/api/tasks/${id}`, false);
-      if (cancelled?.()) return;
 
       if (!result.success) {
-        setMissing(true);
-        setError(result.error);
+        if (result.status === 404 || result.code === "NOT_FOUND") {
+          setMissing(true);
+        } else {
+          setError(result.error || "加载文章失败");
+        }
         return;
       }
 
@@ -52,28 +74,21 @@ function ArticlePage() {
 
       setArticle(result.data);
     } catch (fetchError: unknown) {
-      if (cancelled?.()) return;
-      setMissing(true);
       setError(fetchError instanceof Error ? fetchError.message : "加载文章失败");
     } finally {
-      if (!cancelled?.()) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   }, [id]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    fetchArticle(() => cancelled);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchArticle]);
+    setArticle(initialArticle);
+    setMissing(false);
+    setError(null);
+    setLoading(false);
+  }, [initialArticle]);
 
   if (missing) {
-    throw notFound({ data: error || "文章不存在" });
+    throw notFound({ data: "文章不存在" });
   }
 
   if (loading) {
@@ -81,6 +96,28 @@ function ArticlePage() {
       <main className="container mx-auto max-w-3xl p-6">
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--muted-foreground))]" />
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="container mx-auto max-w-3xl p-6">
+        <BackButton />
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+          <div className="flex items-center gap-2 font-medium">
+            <AlertTriangle className="h-5 w-5 shrink-0" />
+            加载文章失败
+          </div>
+          <p className="mt-2 text-sm">{error}</p>
+          <button
+            type="button"
+            onClick={fetchArticle}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+          >
+            重试
+          </button>
         </div>
       </main>
     );

@@ -18,8 +18,9 @@ export function BackButton() {
 
   return (
     <button
+      type="button"
       onClick={handleBack}
-      className="inline-flex items-center gap-1 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] mb-8 cursor-pointer"
+      className="inline-flex items-center gap-1 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] cursor-pointer"
     >
       <ArrowLeft className="h-4 w-4" />
       返回列表

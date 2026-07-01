@@ -14,6 +14,7 @@ import { Route as StatsPageRouteImport } from './app/stats/page'
 import { Route as AdminPageRouteImport } from './app/admin/page'
 import { Route as AboutPageRouteImport } from './app/about/page'
 import { Route as TasksIdPageRouteImport } from './app/tasks/$id/page'
+import { Route as ApiAdminAuthRouteRouteImport } from './app/api/admin/auth/route'
 
 const PageRoute = PageRouteImport.update({
   id: '/',
@@ -40,12 +41,18 @@ const TasksIdPageRoute = TasksIdPageRouteImport.update({
   path: '/tasks/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminAuthRouteRoute = ApiAdminAuthRouteRouteImport.update({
+  id: '/api/admin/auth',
+  path: '/api/admin/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PageRoute
   '/about/': typeof AboutPageRoute
   '/admin/': typeof AdminPageRoute
   '/stats/': typeof StatsPageRoute
+  '/api/admin/auth': typeof ApiAdminAuthRouteRoute
   '/tasks/$id/': typeof TasksIdPageRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutPageRoute
   '/admin': typeof AdminPageRoute
   '/stats': typeof StatsPageRoute
+  '/api/admin/auth': typeof ApiAdminAuthRouteRoute
   '/tasks/$id': typeof TasksIdPageRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,23 @@ export interface FileRoutesById {
   '/about/': typeof AboutPageRoute
   '/admin/': typeof AdminPageRoute
   '/stats/': typeof StatsPageRoute
+  '/api/admin/auth': typeof ApiAdminAuthRouteRoute
   '/tasks/$id/': typeof TasksIdPageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about/' | '/admin/' | '/stats/' | '/tasks/$id/'
+  fullPaths:
+    '/' | '/about/' | '/admin/' | '/stats/' | '/api/admin/auth' | '/tasks/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/admin' | '/stats' | '/tasks/$id'
-  id: '__root__' | '/' | '/about/' | '/admin/' | '/stats/' | '/tasks/$id/'
+  to: '/' | '/about' | '/admin' | '/stats' | '/api/admin/auth' | '/tasks/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/about/'
+    | '/admin/'
+    | '/stats/'
+    | '/api/admin/auth'
+    | '/tasks/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +93,7 @@ export interface RootRouteChildren {
   AboutPageRoute: typeof AboutPageRoute
   AdminPageRoute: typeof AdminPageRoute
   StatsPageRoute: typeof StatsPageRoute
+  ApiAdminAuthRouteRoute: typeof ApiAdminAuthRouteRoute
   TasksIdPageRoute: typeof TasksIdPageRoute
 }
 
@@ -116,6 +134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasksIdPageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/auth': {
+      id: '/api/admin/auth'
+      path: '/api/admin/auth'
+      fullPath: '/api/admin/auth'
+      preLoaderRoute: typeof ApiAdminAuthRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -124,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutPageRoute: AboutPageRoute,
   AdminPageRoute: AdminPageRoute,
   StatsPageRoute: StatsPageRoute,
+  ApiAdminAuthRouteRoute: ApiAdminAuthRouteRoute,
   TasksIdPageRoute: TasksIdPageRoute,
 }
 export const routeTree = rootRouteImport

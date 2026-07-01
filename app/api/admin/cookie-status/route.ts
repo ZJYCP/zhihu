@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api-error";
+import { requireAdminRequest } from "@/lib/admin-auth";
 
 // GET /api/admin/cookie-status - 获取 Cookie 检查状态
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const authError = requireAdminRequest(request);
+    if (authError) return authError;
+
     // 获取最近 24 小时的检查记录
     const oneDayAgo = new Date();
     oneDayAgo.setHours(oneDayAgo.getHours() - 24);
