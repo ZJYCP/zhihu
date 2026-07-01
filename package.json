@@ -14,6 +14,7 @@
     "test:auth": "tsx scripts/admin-auth.test.ts",
     "test:api-routes": "tsx scripts/api-routes.test.ts",
     "test:deploy": "node scripts/deploy-contract.test.mjs",
+    "test:migration": "node scripts/migration-contract.test.mjs",
     "test:runtime-config": "tsx scripts/runtime-config.test.ts",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",

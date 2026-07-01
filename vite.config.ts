@@ -22,6 +22,18 @@ export default defineConfig({
     viteReact(),
     nitro({
       noExternals: true,
+      rolldownConfig: {
+        external: [
+          /^@prisma\/client(\/.*)?$/,
+          /^sharp(\/.*)?$/,
+        ],
+      },
+      rollupConfig: {
+        external: [
+          /^@prisma\/client(\/.*)?$/,
+          /^sharp(\/.*)?$/,
+        ],
+      },
     }),
   ],
 });

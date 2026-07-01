@@ -1,6 +1,3 @@
-"use client"
-
-import { useState, useEffect } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -11,19 +8,7 @@ import {
   Copy,
   ChevronRight,
   Activity,
-  CheckCircle2,
-  XCircle,
 } from "lucide-react"
-
-interface CookieStatus {
-  latest: {
-    success: boolean
-    message: string
-    checkedAt: string
-  } | null
-  successRate: number
-  logs: { success: boolean; checkedAt: string }[]
-}
 
 export const Route = createFileRoute("/about/")({
   head: () => ({
@@ -36,15 +21,6 @@ export const Route = createFileRoute("/about/")({
 })
 
 function AboutPage() {
-  const [cookieStatus, setCookieStatus] = useState<CookieStatus | null>(null)
-
-  useEffect(() => {
-    fetch("/api/admin/cookie-status")
-      .then((res) => res.json())
-      .then((data) => setCookieStatus(data))
-      .catch(() => {})
-  }, [])
-
   return (
     <main className="container mx-auto max-w-4xl p-6">
       <h1 className="text-3xl font-bold mb-8">关于</h1>
@@ -59,65 +35,18 @@ function AboutPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {cookieStatus ? (
-              <div className="space-y-4">
-                {/* 当前状态 */}
-                <div className="flex items-center gap-3">
-                  {cookieStatus.latest?.success ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                  <div>
-                    <p className="font-medium">
-                      采集服务
-                      <span
-                        className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                          cookieStatus.latest?.success
-                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                            : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                        }`}
-                      >
-                        {cookieStatus.latest?.success ? "正常" : "异常"}
-                      </span>
-                    </p>
-                    {cookieStatus.latest && (
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                        最近检查：
-                        {new Date(cookieStatus.latest.checkedAt).toLocaleString("zh-CN")}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* 24 小时状态时间线 */}
-                {cookieStatus.logs.length > 0 && (
-                  <div>
-                    <p className="text-sm text-[hsl(var(--muted-foreground))] mb-2">
-                      最近 24 小时状态 · 成功率 {cookieStatus.successRate}%
-                    </p>
-                    <div className="flex gap-1 flex-wrap">
-                      {cookieStatus.logs
-                        .slice()
-                        .reverse()
-                        .map((log, i) => (
-                          <div
-                            key={i}
-                            className={`w-3 h-8 rounded-sm ${
-                              log.success ? "bg-green-500" : "bg-red-500"
-                            }`}
-                            title={`${new Date(log.checkedAt).toLocaleString("zh-CN")} - ${
-                              log.success ? "正常" : "异常"
-                            }`}
-                          />
-                        ))}
-                    </div>
-                  </div>
-                )}
+            <div className="space-y-3 text-sm text-[hsl(var(--muted-foreground))]">
+              <p>
+                知乎 Cookie、OCR Key、请求间隔、限流参数和 Cookie
+                检查结果均在管理后台维护。
+              </p>
+              <p>
+                为避免公开暴露运行状态，服务健康详情仅管理员登录后可见。
+              </p>
+              <div className="inline-flex items-center rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-xs text-[hsl(var(--foreground))]">
+                访问 /admin 查看服务状态
               </div>
-            ) : (
-              <p className="text-sm text-[hsl(var(--muted-foreground))]">加载中...</p>
-            )}
+            </div>
           </CardContent>
         </Card>
 
