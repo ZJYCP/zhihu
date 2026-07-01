@@ -9,6 +9,8 @@ import {
   ChevronRight,
   Activity,
 } from "lucide-react"
+import type { PublicCookieStatus } from "@/lib/service-status"
+import { getServiceStatusForAbout } from "./-service-status.functions"
 
 export const Route = createFileRoute("/about/")({
   head: () => ({
@@ -17,10 +19,13 @@ export const Route = createFileRoute("/about/")({
       { name: "description", content: "了解拾盐记的服务状态、使用方式和免责声明" },
     ],
   }),
+  loader: () => getServiceStatusForAbout(),
   component: AboutPage,
 })
 
 function AboutPage() {
+  const cookieStatus = Route.useLoaderData()
+
   return (
     <main className="container mx-auto max-w-4xl p-6">
       <h1 className="text-3xl font-bold mb-8">关于</h1>
@@ -35,18 +40,7 @@ function AboutPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 text-sm text-[hsl(var(--muted-foreground))]">
-              <p>
-                知乎 Cookie、OCR Key、请求间隔、限流参数和 Cookie
-                检查结果均在管理后台维护。
-              </p>
-              <p>
-                为避免公开暴露运行状态，服务健康详情仅管理员登录后可见。
-              </p>
-              <div className="inline-flex items-center rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-xs text-[hsl(var(--foreground))]">
-                访问 /admin 查看服务状态
-              </div>
-            </div>
+            <ServiceStatusSummary status={cookieStatus} />
           </CardContent>
         </Card>
 
@@ -211,5 +205,71 @@ function AboutPage() {
         </Card>
       </div>
     </main>
+  )
+}
+
+function ServiceStatusSummary({ status }: { status: PublicCookieStatus }) {
+  const latest = status.latest
+  const checkedAt = latest
+    ? new Date(latest.checkedAt).toLocaleString("zh-CN", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "暂无检查记录"
+
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="flex flex-wrap items-center gap-3">
+        {latest && (
+          <span
+            className={`rounded px-2 py-0.5 text-xs ${
+              latest.success
+                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+            }`}
+          >
+            {latest.success ? "正常" : "异常"}
+          </span>
+        )}
+        <span className="text-[hsl(var(--muted-foreground))]">
+          最近检查：{checkedAt}
+        </span>
+        {latest?.message && (
+          <span className="text-[hsl(var(--muted-foreground))]">
+            {latest.message}
+          </span>
+        )}
+      </div>
+
+      {status.logs.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">
+            最近 24 小时状态
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {status.logs
+              .slice()
+              .reverse()
+              .map((log, index) => (
+                <div
+                  key={`${log.checkedAt}-${index}`}
+                  className={`h-8 w-3 rounded-sm ${
+                    log.success ? "bg-green-500" : "bg-red-500"
+                  }`}
+                  title={`${new Date(log.checkedAt).toLocaleString("zh-CN")} - ${
+                    log.success ? "正常" : "异常"
+                  }`}
+                />
+              ))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-[hsl(var(--muted-foreground))]">
+          暂无检查记录。
+        </p>
+      )}
+    </div>
   )
 }

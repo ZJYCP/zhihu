@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 /* global console */
 
@@ -8,6 +8,11 @@ const packageLock = JSON.parse(readFileSync("package-lock.json", "utf8"));
 const dockerfile = readFileSync("Dockerfile", "utf8");
 const compose = readFileSync("docker-compose.yml", "utf8");
 const dockerignore = readFileSync(".dockerignore", "utf8");
+const migrationLock = readFileSync("prisma/migrations/migration_lock.toml", "utf8");
+const currentSchemaMigration = readFileSync(
+  "prisma/migrations/20260701000000_init_current_schema/migration.sql",
+  "utf8",
+);
 
 function assertProductionPackage(packageName) {
   const packagePath = `node_modules/${packageName}`;
@@ -41,7 +46,7 @@ function collectDependencyClosure(packageName, seen = new Set()) {
 
 assert.ok(
   packageJson.dependencies?.prisma,
-  "prisma CLI must be a production dependency so docker compose run web npm run db:push works",
+  "prisma CLI must be a production dependency so production startup can run migrations",
 );
 assert.equal(
   packageJson.devDependencies?.prisma,
@@ -52,6 +57,17 @@ assert.equal(
 for (const packagePath of collectDependencyClosure("prisma")) {
   assertProductionPackage(packagePath.replace(/^node_modules\//, ""));
 }
+
+assert.equal(
+  packageJson.scripts?.["db:migrate:deploy"],
+  "prisma migrate deploy",
+  "package scripts should expose Prisma production migration deployment",
+);
+assert.match(
+  packageJson.scripts?.["start:prod"] ?? "",
+  /prisma migrate deploy[\s\S]*node \.output\/server\/index\.mjs/,
+  "production startup should apply pending Prisma migrations before starting the server",
+);
 
 assert.match(
   dockerfile,
@@ -66,7 +82,46 @@ assert.doesNotMatch(
 assert.match(
   dockerfile,
   /COPY --from=builder \/app\/prisma \.\/prisma/,
-  "runtime image should include Prisma schema for explicit db:push",
+  "runtime image should include Prisma schema and migrations for production migrate deploy",
+);
+assert.ok(
+  existsSync("prisma/migrations/20260701000000_init_current_schema/migration.sql"),
+  "repository should include a committed Prisma migration for the current schema",
+);
+assert.match(
+  currentSchemaMigration,
+  /"content_preview" TEXT/,
+  "initial migration should create content_preview as a regular text column",
+);
+assert.doesNotMatch(
+  currentSchemaMigration,
+  /"content_preview" TEXT DEFAULT .*content/,
+  "initial migration must not use an invalid PostgreSQL default expression that references another column",
+);
+assert.match(
+  currentSchemaMigration,
+  /CREATE OR REPLACE FUNCTION "set_crawl_task_content_preview"/,
+  "initial migration should maintain content_preview through a database trigger",
+);
+assert.match(
+  migrationLock,
+  /provider = "postgresql"/,
+  "Prisma migrations should be locked to the PostgreSQL provider",
+);
+assert.match(
+  dockerfile,
+  /CMD \["npm", "run", "start:prod"\]/,
+  "runtime container should run the migration-aware production startup script",
+);
+assert.match(
+  dockerfile,
+  /COPY --from=builder \/app\/prisma \.\/prisma/,
+  "runtime image should include Prisma migrations",
+);
+assert.doesNotMatch(
+  compose,
+  /db:push/,
+  "Compose deployment should not require manual db:push",
 );
 
 assert.match(

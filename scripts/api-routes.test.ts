@@ -10,9 +10,12 @@ const expectedRoutes = new Map([
   ["admin/check-cookie/route.ts", "/api/admin/check-cookie"],
   ["admin/config/route.ts", "/api/admin/config"],
   ["admin/cookie-status/route.ts", "/api/admin/cookie-status"],
+  ["admin/feedback/$id/route.ts", "/api/admin/feedback/$id"],
+  ["admin/feedback/route.ts", "/api/admin/feedback"],
   ["articles/route.ts", "/api/articles"],
   ["crawl/route.ts", "/api/crawl"],
   ["cron/check-cookie/route.ts", "/api/cron/check-cookie"],
+  ["tasks/$id/feedback/route.ts", "/api/tasks/$id/feedback"],
   ["stats/route.ts", "/api/stats"],
   ["tasks/$id/route.ts", "/api/tasks/$id"],
   ["tasks/clear-failed/route.ts", "/api/tasks/clear-failed"],
@@ -58,5 +61,71 @@ for (const file of routeFiles) {
     `${file} must route to ${expectedRoute}`
   );
 }
+
+const cookieStatusSource = await readFile(
+  join(apiDir.pathname, "admin/cookie-status/route.ts"),
+  "utf8"
+);
+assert.equal(
+  cookieStatusSource.includes("requireAdminRequest"),
+  false,
+  "/api/admin/cookie-status must expose public, read-only service status",
+);
+
+const checkCookieSource = await readFile(
+  join(apiDir.pathname, "admin/check-cookie/route.ts"),
+  "utf8"
+);
+assert.ok(
+  checkCookieSource.includes("requireAdminRequest"),
+  "/api/admin/check-cookie must stay admin-only because it triggers a live Cookie check",
+);
+
+const configSource = await readFile(
+  join(apiDir.pathname, "admin/config/route.ts"),
+  "utf8"
+);
+assert.ok(
+  configSource.includes("requireAdminRequest"),
+  "/api/admin/config must stay admin-only because it exposes runtime configuration",
+);
+
+const publicFeedbackSource = await readFile(
+  join(apiDir.pathname, "tasks/$id/feedback/route.ts"),
+  "utf8"
+);
+assert.equal(
+  publicFeedbackSource.includes("requireAdminRequest"),
+  false,
+  "/api/tasks/$id/feedback must be a public feedback submission endpoint",
+);
+assert.match(
+  publicFeedbackSource,
+  /POST:\s*async/,
+  "/api/tasks/$id/feedback must accept public POST submissions",
+);
+
+const adminFeedbackSource = await readFile(
+  join(apiDir.pathname, "admin/feedback/route.ts"),
+  "utf8"
+);
+assert.ok(
+  adminFeedbackSource.includes("requireAdminRequest"),
+  "/api/admin/feedback must be admin-only because it lists user feedback",
+);
+
+const adminFeedbackDetailSource = await readFile(
+  join(apiDir.pathname, "admin/feedback/$id/route.ts"),
+  "utf8"
+);
+assert.ok(
+  adminFeedbackDetailSource.includes("requireAdminRequest"),
+  "/api/admin/feedback/$id must be admin-only because it updates feedback status",
+);
+assert.match(
+  adminFeedbackDetailSource,
+  /PUT:\s*async/,
+  "/api/admin/feedback/$id must support PUT because the admin API client uses apiPut",
+);
 
 console.log("api route migration contract ok");

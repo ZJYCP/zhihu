@@ -1,5 +1,6 @@
 import {
   createRootRoute,
+  Link,
   HeadContent,
   Outlet,
   Scripts,
@@ -41,6 +42,7 @@ export const Route = createRootRoute({
     links: [{ rel: "stylesheet", href: appCss }],
   }),
   component: RootLayout,
+  notFoundComponent: NotFoundPage,
 });
 
 function RootLayout() {
@@ -58,5 +60,25 @@ function RootLayout() {
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function NotFoundPage() {
+  return (
+    <main className="container mx-auto max-w-3xl px-4 py-16 text-center">
+      <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
+        404
+      </p>
+      <h1 className="mt-3 text-3xl font-bold">页面不存在</h1>
+      <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">
+        你访问的内容可能已被移动、删除，或者链接填写有误。
+      </p>
+      <Link
+        to="/"
+        className="mt-6 inline-flex items-center justify-center rounded-md bg-[hsl(var(--primary))] px-4 py-2 text-sm font-medium text-[hsl(var(--primary-foreground))] transition-colors hover:bg-[hsl(var(--primary))]/90"
+      >
+        返回内容库
+      </Link>
+    </main>
   );
 }

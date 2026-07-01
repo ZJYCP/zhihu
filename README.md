@@ -42,7 +42,7 @@ PORT=3000
 ### 3. 初始化数据库
 
 ```bash
-npm run db:push
+npm run db:migrate:dev
 ```
 
 ### 4. 启动开发服务器
@@ -55,7 +55,7 @@ npm run dev
 
 ## Docker Compose 部署
 
-本项目的 Compose 只启动 Web 服务，不包含 PostgreSQL。请先准备外部 PostgreSQL，并把连接串填入 `.env` 的 `DATABASE_URL`。数据库结构初始化保持为显式操作，容器启动时不会自动执行 `prisma db push`。
+本项目的 Compose 只启动 Web 服务，不包含 PostgreSQL。请先准备外部 PostgreSQL，并把连接串填入 `.env` 的 `DATABASE_URL`。生产容器启动时会先执行 `prisma migrate deploy`，自动应用仓库中尚未执行的数据库迁移；迁移失败时服务不会继续启动。
 
 如果 PostgreSQL 跑在宿主机上，`DATABASE_URL` 里的主机名需要使用容器可访问的地址；macOS/Windows Docker Desktop 通常可以用 `host.docker.internal`。
 
@@ -64,13 +64,12 @@ cp .env.example .env
 # 编辑 .env，填写 DATABASE_URL、ADMIN_PASSWORD、APP_SECRET、PORT
 
 docker compose build
-docker compose run --rm web npm run db:push
 docker compose up -d
 ```
 
 首次启动后访问 `/admin`，使用 `ADMIN_PASSWORD` 登录，然后在系统设置里填写知乎 Cookie、SiliconFlow API Key 等运行时配置。
 
-更新代码或 Prisma schema 后，重新执行 `docker compose build`，并在需要变更数据库结构时手动运行 `docker compose run --rm web npm run db:push`。
+更新代码或 Prisma schema 后，先在开发环境生成并提交 Prisma migration，再重新执行 `docker compose build && docker compose up -d`。容器启动时会自动同步数据库结构。
 
 ## 支持的链接格式
 
@@ -104,7 +103,10 @@ docker compose up -d
 npm run dev          # 启动开发服务器
 npm run build        # 构建生产版本
 npm run start        # 启动生产服务器（需先 npm run build）
-npm run db:push      # 推送数据库 Schema
+npm run start:prod   # 应用生产迁移并启动服务
+npm run db:migrate:dev     # 开发环境生成并应用 Prisma migration
+npm run db:migrate:deploy  # 生产环境应用已提交的 Prisma migration
+npm run db:push      # 原型期快速同步 Schema（不建议用于生产）
 npm run db:studio    # 打开 Prisma Studio
 npm run crawl <url>  # CLI 爬取单个文章
 npm run lint         # 代码检查

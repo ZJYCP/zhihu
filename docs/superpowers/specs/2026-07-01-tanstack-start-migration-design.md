@@ -55,7 +55,7 @@ external dependency
 
 The compose file must not create or manage a PostgreSQL service, volume, or database lifecycle. The operator supplies a working PostgreSQL connection string.
 
-Database schema updates should remain explicit. The container should not automatically run `prisma db push` on every startup. Documentation should instruct the operator to run the schema push command intentionally after configuring `DATABASE_URL`.
+Database schema updates should use committed Prisma migrations. The production container should run `prisma migrate deploy` before starting the HTTP server so Docker Compose deployments apply pending schema changes automatically. The container must not run `prisma db push` in production.
 
 ## Environment Variables
 
@@ -257,7 +257,10 @@ Package scripts should be updated around TanStack Start:
 npm run dev       Start TanStack Start dev server
 npm run build     Generate Prisma client and build the app
 npm run start     Start the built Node server
-npm run db:push   Push Prisma schema to the external database
+npm run start:prod        Apply production migrations and start the built Node server
+npm run db:migrate:dev    Generate and apply Prisma migrations locally
+npm run db:migrate:deploy Apply committed Prisma migrations in production
+npm run db:push           Prototype-only schema sync, not for production
 npm run lint      Run linting
 ```
 
@@ -273,7 +276,7 @@ The README should describe:
 1. Create or obtain a PostgreSQL database.
 2. Fill `DATABASE_URL`, `ADMIN_PASSWORD`, `APP_SECRET`, and `PORT`.
 3. Start the app with Docker Compose.
-4. Run the explicit database schema push command.
+4. Let the production startup script apply pending Prisma migrations.
 5. Open the admin page and configure Zhihu Cookie and SiliconFlow API Key.
 
 ## Verification
@@ -283,7 +286,7 @@ Required local checks:
 ```txt
 npm run lint
 npm run build
-npm run db:push against a test database
+npm run db:migrate:deploy against a test database
 ```
 
 Required smoke checks:
@@ -330,7 +333,7 @@ Docker compose       Web service starts and serves the app
 
 - Add Dockerfile and single-service Docker Compose.
 - Update `.env.example`.
-- Update README with external database setup and explicit schema push.
+- Update README with external database setup and automatic production migration deployment.
 - Verify container startup and basic app access.
 
 ## Out Of Scope
@@ -341,7 +344,7 @@ Docker compose       Web service starts and serves the app
 - Docker-managed PostgreSQL.
 - Full monorepo conversion.
 - React Server Components as a required migration feature.
-- Automatically running schema changes on every container startup.
+- Automatically running `prisma db push` on every container startup.
 
 ## Open Risks
 

@@ -21,11 +21,14 @@ import { Route as TasksIdPageRouteImport } from './app/tasks/$id/page'
 import { Route as ApiTasksClearFailedRouteRouteImport } from './app/api/tasks/clear-failed/route'
 import { Route as ApiTasksIdRouteRouteImport } from './app/api/tasks/$id/route'
 import { Route as ApiCronCheckCookieRouteRouteImport } from './app/api/cron/check-cookie/route'
+import { Route as ApiAdminFeedbackRouteRouteImport } from './app/api/admin/feedback/route'
 import { Route as ApiAdminCookieStatusRouteRouteImport } from './app/api/admin/cookie-status/route'
 import { Route as ApiAdminConfigRouteRouteImport } from './app/api/admin/config/route'
 import { Route as ApiAdminCheckCookieRouteRouteImport } from './app/api/admin/check-cookie/route'
 import { Route as ApiAdminAuthRouteRouteImport } from './app/api/admin/auth/route'
 import { Route as ApiAdminArticlesRouteRouteImport } from './app/api/admin/articles/route'
+import { Route as ApiTasksIdFeedbackRouteRouteImport } from './app/api/tasks/$id/feedback/route'
+import { Route as ApiAdminFeedbackIdRouteRouteImport } from './app/api/admin/feedback/$id/route'
 import { Route as ApiAdminArticlesIdRouteRouteImport } from './app/api/admin/articles/$id/route'
 
 const PageRoute = PageRouteImport.update({
@@ -89,6 +92,11 @@ const ApiCronCheckCookieRouteRoute = ApiCronCheckCookieRouteRouteImport.update({
   path: '/api/cron/check-cookie',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminFeedbackRouteRoute = ApiAdminFeedbackRouteRouteImport.update({
+  id: '/api/admin/feedback',
+  path: '/api/admin/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminCookieStatusRouteRoute =
   ApiAdminCookieStatusRouteRouteImport.update({
     id: '/api/admin/cookie-status',
@@ -116,6 +124,16 @@ const ApiAdminArticlesRouteRoute = ApiAdminArticlesRouteRouteImport.update({
   path: '/api/admin/articles',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksIdFeedbackRouteRoute = ApiTasksIdFeedbackRouteRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => ApiTasksIdRouteRoute,
+} as any)
+const ApiAdminFeedbackIdRouteRoute = ApiAdminFeedbackIdRouteRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAdminFeedbackRouteRoute,
+} as any)
 const ApiAdminArticlesIdRouteRoute = ApiAdminArticlesIdRouteRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -136,11 +154,14 @@ export interface FileRoutesByFullPath {
   '/api/admin/check-cookie': typeof ApiAdminCheckCookieRouteRoute
   '/api/admin/config': typeof ApiAdminConfigRouteRoute
   '/api/admin/cookie-status': typeof ApiAdminCookieStatusRouteRoute
+  '/api/admin/feedback': typeof ApiAdminFeedbackRouteRouteWithChildren
   '/api/cron/check-cookie': typeof ApiCronCheckCookieRouteRoute
-  '/api/tasks/$id': typeof ApiTasksIdRouteRoute
+  '/api/tasks/$id': typeof ApiTasksIdRouteRouteWithChildren
   '/api/tasks/clear-failed': typeof ApiTasksClearFailedRouteRoute
   '/tasks/$id/': typeof TasksIdPageRoute
   '/api/admin/articles/$id': typeof ApiAdminArticlesIdRouteRoute
+  '/api/admin/feedback/$id': typeof ApiAdminFeedbackIdRouteRoute
+  '/api/tasks/$id/feedback': typeof ApiTasksIdFeedbackRouteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PageRoute
@@ -156,11 +177,14 @@ export interface FileRoutesByTo {
   '/api/admin/check-cookie': typeof ApiAdminCheckCookieRouteRoute
   '/api/admin/config': typeof ApiAdminConfigRouteRoute
   '/api/admin/cookie-status': typeof ApiAdminCookieStatusRouteRoute
+  '/api/admin/feedback': typeof ApiAdminFeedbackRouteRouteWithChildren
   '/api/cron/check-cookie': typeof ApiCronCheckCookieRouteRoute
-  '/api/tasks/$id': typeof ApiTasksIdRouteRoute
+  '/api/tasks/$id': typeof ApiTasksIdRouteRouteWithChildren
   '/api/tasks/clear-failed': typeof ApiTasksClearFailedRouteRoute
   '/tasks/$id': typeof TasksIdPageRoute
   '/api/admin/articles/$id': typeof ApiAdminArticlesIdRouteRoute
+  '/api/admin/feedback/$id': typeof ApiAdminFeedbackIdRouteRoute
+  '/api/tasks/$id/feedback': typeof ApiTasksIdFeedbackRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -177,11 +201,14 @@ export interface FileRoutesById {
   '/api/admin/check-cookie': typeof ApiAdminCheckCookieRouteRoute
   '/api/admin/config': typeof ApiAdminConfigRouteRoute
   '/api/admin/cookie-status': typeof ApiAdminCookieStatusRouteRoute
+  '/api/admin/feedback': typeof ApiAdminFeedbackRouteRouteWithChildren
   '/api/cron/check-cookie': typeof ApiCronCheckCookieRouteRoute
-  '/api/tasks/$id': typeof ApiTasksIdRouteRoute
+  '/api/tasks/$id': typeof ApiTasksIdRouteRouteWithChildren
   '/api/tasks/clear-failed': typeof ApiTasksClearFailedRouteRoute
   '/tasks/$id/': typeof TasksIdPageRoute
   '/api/admin/articles/$id': typeof ApiAdminArticlesIdRouteRoute
+  '/api/admin/feedback/$id': typeof ApiAdminFeedbackIdRouteRoute
+  '/api/tasks/$id/feedback': typeof ApiTasksIdFeedbackRouteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -199,11 +226,14 @@ export interface FileRouteTypes {
     | '/api/admin/check-cookie'
     | '/api/admin/config'
     | '/api/admin/cookie-status'
+    | '/api/admin/feedback'
     | '/api/cron/check-cookie'
     | '/api/tasks/$id'
     | '/api/tasks/clear-failed'
     | '/tasks/$id/'
     | '/api/admin/articles/$id'
+    | '/api/admin/feedback/$id'
+    | '/api/tasks/$id/feedback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -219,11 +249,14 @@ export interface FileRouteTypes {
     | '/api/admin/check-cookie'
     | '/api/admin/config'
     | '/api/admin/cookie-status'
+    | '/api/admin/feedback'
     | '/api/cron/check-cookie'
     | '/api/tasks/$id'
     | '/api/tasks/clear-failed'
     | '/tasks/$id'
     | '/api/admin/articles/$id'
+    | '/api/admin/feedback/$id'
+    | '/api/tasks/$id/feedback'
   id:
     | '__root__'
     | '/'
@@ -239,11 +272,14 @@ export interface FileRouteTypes {
     | '/api/admin/check-cookie'
     | '/api/admin/config'
     | '/api/admin/cookie-status'
+    | '/api/admin/feedback'
     | '/api/cron/check-cookie'
     | '/api/tasks/$id'
     | '/api/tasks/clear-failed'
     | '/tasks/$id/'
     | '/api/admin/articles/$id'
+    | '/api/admin/feedback/$id'
+    | '/api/tasks/$id/feedback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -260,6 +296,7 @@ export interface RootRouteChildren {
   ApiAdminCheckCookieRouteRoute: typeof ApiAdminCheckCookieRouteRoute
   ApiAdminConfigRouteRoute: typeof ApiAdminConfigRouteRoute
   ApiAdminCookieStatusRouteRoute: typeof ApiAdminCookieStatusRouteRoute
+  ApiAdminFeedbackRouteRoute: typeof ApiAdminFeedbackRouteRouteWithChildren
   ApiCronCheckCookieRouteRoute: typeof ApiCronCheckCookieRouteRoute
   TasksIdPageRoute: typeof TasksIdPageRoute
 }
@@ -350,6 +387,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronCheckCookieRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/feedback': {
+      id: '/api/admin/feedback'
+      path: '/api/admin/feedback'
+      fullPath: '/api/admin/feedback'
+      preLoaderRoute: typeof ApiAdminFeedbackRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/cookie-status': {
       id: '/api/admin/cookie-status'
       path: '/api/admin/cookie-status'
@@ -385,6 +429,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminArticlesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tasks/$id/feedback': {
+      id: '/api/tasks/$id/feedback'
+      path: '/feedback'
+      fullPath: '/api/tasks/$id/feedback'
+      preLoaderRoute: typeof ApiTasksIdFeedbackRouteRouteImport
+      parentRoute: typeof ApiTasksIdRouteRoute
+    }
+    '/api/admin/feedback/$id': {
+      id: '/api/admin/feedback/$id'
+      path: '/$id'
+      fullPath: '/api/admin/feedback/$id'
+      preLoaderRoute: typeof ApiAdminFeedbackIdRouteRouteImport
+      parentRoute: typeof ApiAdminFeedbackRouteRoute
+    }
     '/api/admin/articles/$id': {
       id: '/api/admin/articles/$id'
       path: '/$id'
@@ -395,13 +453,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ApiTasksIdRouteRouteChildren {
+  ApiTasksIdFeedbackRouteRoute: typeof ApiTasksIdFeedbackRouteRoute
+}
+
+const ApiTasksIdRouteRouteChildren: ApiTasksIdRouteRouteChildren = {
+  ApiTasksIdFeedbackRouteRoute: ApiTasksIdFeedbackRouteRoute,
+}
+
+const ApiTasksIdRouteRouteWithChildren = ApiTasksIdRouteRoute._addFileChildren(
+  ApiTasksIdRouteRouteChildren,
+)
+
 interface ApiTasksRouteRouteChildren {
-  ApiTasksIdRouteRoute: typeof ApiTasksIdRouteRoute
+  ApiTasksIdRouteRoute: typeof ApiTasksIdRouteRouteWithChildren
   ApiTasksClearFailedRouteRoute: typeof ApiTasksClearFailedRouteRoute
 }
 
 const ApiTasksRouteRouteChildren: ApiTasksRouteRouteChildren = {
-  ApiTasksIdRouteRoute: ApiTasksIdRouteRoute,
+  ApiTasksIdRouteRoute: ApiTasksIdRouteRouteWithChildren,
   ApiTasksClearFailedRouteRoute: ApiTasksClearFailedRouteRoute,
 }
 
@@ -422,6 +492,19 @@ const ApiAdminArticlesRouteRouteWithChildren =
     ApiAdminArticlesRouteRouteChildren,
   )
 
+interface ApiAdminFeedbackRouteRouteChildren {
+  ApiAdminFeedbackIdRouteRoute: typeof ApiAdminFeedbackIdRouteRoute
+}
+
+const ApiAdminFeedbackRouteRouteChildren: ApiAdminFeedbackRouteRouteChildren = {
+  ApiAdminFeedbackIdRouteRoute: ApiAdminFeedbackIdRouteRoute,
+}
+
+const ApiAdminFeedbackRouteRouteWithChildren =
+  ApiAdminFeedbackRouteRoute._addFileChildren(
+    ApiAdminFeedbackRouteRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   PageRoute: PageRoute,
   ApiArticlesRouteRoute: ApiArticlesRouteRoute,
@@ -436,6 +519,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminCheckCookieRouteRoute: ApiAdminCheckCookieRouteRoute,
   ApiAdminConfigRouteRoute: ApiAdminConfigRouteRoute,
   ApiAdminCookieStatusRouteRoute: ApiAdminCookieStatusRouteRoute,
+  ApiAdminFeedbackRouteRoute: ApiAdminFeedbackRouteRouteWithChildren,
   ApiCronCheckCookieRouteRoute: ApiCronCheckCookieRouteRoute,
   TasksIdPageRoute: TasksIdPageRoute,
 }

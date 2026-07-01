@@ -10,6 +10,7 @@
     "dev": "vite dev --host 0.0.0.0",
     "build": "prisma generate && vite build",
     "start": "node .output/server/index.mjs",
+    "start:prod": "prisma migrate deploy && node .output/server/index.mjs",
     "lint": "eslint .",
     "test:auth": "tsx scripts/admin-auth.test.ts",
     "test:api-routes": "tsx scripts/api-routes.test.ts",
@@ -18,6 +19,8 @@
     "test:runtime-config": "tsx scripts/runtime-config.test.ts",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "crawl": "tsx src/cli/index.ts",
     "import": "tsx scripts/import-articles.ts"
