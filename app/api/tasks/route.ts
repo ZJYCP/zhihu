@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/prisma";
 import { cleanZhihuUrl } from "@/lib/crawler";
-import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
 
 // GET /api/tasks - 获取任务列表
-export async function GET(request: NextRequest) {
+async function getTasks(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
           createdAt: true,
         },
       });
-      return NextResponse.json(tasks);
+      return jsonResponse(tasks);
     }
 
     // 默认查询所有任务（如果真的需要的话，可以加分页）
@@ -40,14 +40,14 @@ export async function GET(request: NextRequest) {
         createdAt: true,
       },
     });
-    return NextResponse.json(tasks);
+    return jsonResponse(tasks);
   } catch (error) {
     return handleApiError(error, "获取任务列表失败");
   }
 }
 
 // POST /api/tasks - 创建任务
-export async function POST(request: NextRequest) {
+async function createTask(request: Request) {
   try {
     const body = await safeParseJson<{ url?: string }>(request);
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
-      return NextResponse.json({ existing: true, article: existing });
+      return jsonResponse({ existing: true, article: existing });
     }
 
     // 创建新任务
@@ -92,8 +92,17 @@ export async function POST(request: NextRequest) {
       data: { url: cleanUrl },
     });
 
-    return NextResponse.json(task);
+    return jsonResponse(task);
   } catch (error) {
     return handleApiError(error, "创建任务失败");
   }
 }
+
+export const Route = createFileRoute("/api/tasks")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => getTasks(request),
+      POST: async ({ request }) => createTask(request),
+    },
+  },
+});

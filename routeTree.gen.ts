@@ -13,8 +13,19 @@ import { Route as PageRouteImport } from './app/page'
 import { Route as StatsPageRouteImport } from './app/stats/page'
 import { Route as AdminPageRouteImport } from './app/admin/page'
 import { Route as AboutPageRouteImport } from './app/about/page'
+import { Route as ApiTasksRouteRouteImport } from './app/api/tasks/route'
+import { Route as ApiStatsRouteRouteImport } from './app/api/stats/route'
+import { Route as ApiCrawlRouteRouteImport } from './app/api/crawl/route'
+import { Route as ApiArticlesRouteRouteImport } from './app/api/articles/route'
 import { Route as TasksIdPageRouteImport } from './app/tasks/$id/page'
+import { Route as ApiTasksClearFailedRouteRouteImport } from './app/api/tasks/clear-failed/route'
+import { Route as ApiTasksIdRouteRouteImport } from './app/api/tasks/$id/route'
+import { Route as ApiCronCheckCookieRouteRouteImport } from './app/api/cron/check-cookie/route'
+import { Route as ApiAdminCookieStatusRouteRouteImport } from './app/api/admin/cookie-status/route'
+import { Route as ApiAdminConfigRouteRouteImport } from './app/api/admin/config/route'
 import { Route as ApiAdminAuthRouteRouteImport } from './app/api/admin/auth/route'
+import { Route as ApiAdminArticlesRouteRouteImport } from './app/api/admin/articles/route'
+import { Route as ApiAdminArticlesIdRouteRouteImport } from './app/api/admin/articles/$id/route'
 
 const PageRoute = PageRouteImport.update({
   id: '/',
@@ -36,9 +47,56 @@ const AboutPageRoute = AboutPageRouteImport.update({
   path: '/about/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksRouteRoute = ApiTasksRouteRouteImport.update({
+  id: '/api/tasks',
+  path: '/api/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStatsRouteRoute = ApiStatsRouteRouteImport.update({
+  id: '/api/stats',
+  path: '/api/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCrawlRouteRoute = ApiCrawlRouteRouteImport.update({
+  id: '/api/crawl',
+  path: '/api/crawl',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiArticlesRouteRoute = ApiArticlesRouteRouteImport.update({
+  id: '/api/articles',
+  path: '/api/articles',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TasksIdPageRoute = TasksIdPageRouteImport.update({
   id: '/tasks/$id/',
   path: '/tasks/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTasksClearFailedRouteRoute =
+  ApiTasksClearFailedRouteRouteImport.update({
+    id: '/clear-failed',
+    path: '/clear-failed',
+    getParentRoute: () => ApiTasksRouteRoute,
+  } as any)
+const ApiTasksIdRouteRoute = ApiTasksIdRouteRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiTasksRouteRoute,
+} as any)
+const ApiCronCheckCookieRouteRoute = ApiCronCheckCookieRouteRouteImport.update({
+  id: '/api/cron/check-cookie',
+  path: '/api/cron/check-cookie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminCookieStatusRouteRoute =
+  ApiAdminCookieStatusRouteRouteImport.update({
+    id: '/api/admin/cookie-status',
+    path: '/api/admin/cookie-status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiAdminConfigRouteRoute = ApiAdminConfigRouteRouteImport.update({
+  id: '/api/admin/config',
+  path: '/api/admin/config',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminAuthRouteRoute = ApiAdminAuthRouteRouteImport.update({
@@ -46,54 +104,149 @@ const ApiAdminAuthRouteRoute = ApiAdminAuthRouteRouteImport.update({
   path: '/api/admin/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminArticlesRouteRoute = ApiAdminArticlesRouteRouteImport.update({
+  id: '/api/admin/articles',
+  path: '/api/admin/articles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminArticlesIdRouteRoute = ApiAdminArticlesIdRouteRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAdminArticlesRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PageRoute
+  '/api/articles': typeof ApiArticlesRouteRoute
+  '/api/crawl': typeof ApiCrawlRouteRoute
+  '/api/stats': typeof ApiStatsRouteRoute
+  '/api/tasks': typeof ApiTasksRouteRouteWithChildren
   '/about/': typeof AboutPageRoute
   '/admin/': typeof AdminPageRoute
   '/stats/': typeof StatsPageRoute
+  '/api/admin/articles': typeof ApiAdminArticlesRouteRouteWithChildren
   '/api/admin/auth': typeof ApiAdminAuthRouteRoute
+  '/api/admin/config': typeof ApiAdminConfigRouteRoute
+  '/api/admin/cookie-status': typeof ApiAdminCookieStatusRouteRoute
+  '/api/cron/check-cookie': typeof ApiCronCheckCookieRouteRoute
+  '/api/tasks/$id': typeof ApiTasksIdRouteRoute
+  '/api/tasks/clear-failed': typeof ApiTasksClearFailedRouteRoute
   '/tasks/$id/': typeof TasksIdPageRoute
+  '/api/admin/articles/$id': typeof ApiAdminArticlesIdRouteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PageRoute
+  '/api/articles': typeof ApiArticlesRouteRoute
+  '/api/crawl': typeof ApiCrawlRouteRoute
+  '/api/stats': typeof ApiStatsRouteRoute
+  '/api/tasks': typeof ApiTasksRouteRouteWithChildren
   '/about': typeof AboutPageRoute
   '/admin': typeof AdminPageRoute
   '/stats': typeof StatsPageRoute
+  '/api/admin/articles': typeof ApiAdminArticlesRouteRouteWithChildren
   '/api/admin/auth': typeof ApiAdminAuthRouteRoute
+  '/api/admin/config': typeof ApiAdminConfigRouteRoute
+  '/api/admin/cookie-status': typeof ApiAdminCookieStatusRouteRoute
+  '/api/cron/check-cookie': typeof ApiCronCheckCookieRouteRoute
+  '/api/tasks/$id': typeof ApiTasksIdRouteRoute
+  '/api/tasks/clear-failed': typeof ApiTasksClearFailedRouteRoute
   '/tasks/$id': typeof TasksIdPageRoute
+  '/api/admin/articles/$id': typeof ApiAdminArticlesIdRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof PageRoute
+  '/api/articles': typeof ApiArticlesRouteRoute
+  '/api/crawl': typeof ApiCrawlRouteRoute
+  '/api/stats': typeof ApiStatsRouteRoute
+  '/api/tasks': typeof ApiTasksRouteRouteWithChildren
   '/about/': typeof AboutPageRoute
   '/admin/': typeof AdminPageRoute
   '/stats/': typeof StatsPageRoute
+  '/api/admin/articles': typeof ApiAdminArticlesRouteRouteWithChildren
   '/api/admin/auth': typeof ApiAdminAuthRouteRoute
+  '/api/admin/config': typeof ApiAdminConfigRouteRoute
+  '/api/admin/cookie-status': typeof ApiAdminCookieStatusRouteRoute
+  '/api/cron/check-cookie': typeof ApiCronCheckCookieRouteRoute
+  '/api/tasks/$id': typeof ApiTasksIdRouteRoute
+  '/api/tasks/clear-failed': typeof ApiTasksClearFailedRouteRoute
   '/tasks/$id/': typeof TasksIdPageRoute
+  '/api/admin/articles/$id': typeof ApiAdminArticlesIdRouteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/about/' | '/admin/' | '/stats/' | '/api/admin/auth' | '/tasks/$id/'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/admin' | '/stats' | '/api/admin/auth' | '/tasks/$id'
-  id:
-    | '__root__'
     | '/'
+    | '/api/articles'
+    | '/api/crawl'
+    | '/api/stats'
+    | '/api/tasks'
     | '/about/'
     | '/admin/'
     | '/stats/'
+    | '/api/admin/articles'
     | '/api/admin/auth'
+    | '/api/admin/config'
+    | '/api/admin/cookie-status'
+    | '/api/cron/check-cookie'
+    | '/api/tasks/$id'
+    | '/api/tasks/clear-failed'
     | '/tasks/$id/'
+    | '/api/admin/articles/$id'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/api/articles'
+    | '/api/crawl'
+    | '/api/stats'
+    | '/api/tasks'
+    | '/about'
+    | '/admin'
+    | '/stats'
+    | '/api/admin/articles'
+    | '/api/admin/auth'
+    | '/api/admin/config'
+    | '/api/admin/cookie-status'
+    | '/api/cron/check-cookie'
+    | '/api/tasks/$id'
+    | '/api/tasks/clear-failed'
+    | '/tasks/$id'
+    | '/api/admin/articles/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/articles'
+    | '/api/crawl'
+    | '/api/stats'
+    | '/api/tasks'
+    | '/about/'
+    | '/admin/'
+    | '/stats/'
+    | '/api/admin/articles'
+    | '/api/admin/auth'
+    | '/api/admin/config'
+    | '/api/admin/cookie-status'
+    | '/api/cron/check-cookie'
+    | '/api/tasks/$id'
+    | '/api/tasks/clear-failed'
+    | '/tasks/$id/'
+    | '/api/admin/articles/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   PageRoute: typeof PageRoute
+  ApiArticlesRouteRoute: typeof ApiArticlesRouteRoute
+  ApiCrawlRouteRoute: typeof ApiCrawlRouteRoute
+  ApiStatsRouteRoute: typeof ApiStatsRouteRoute
+  ApiTasksRouteRoute: typeof ApiTasksRouteRouteWithChildren
   AboutPageRoute: typeof AboutPageRoute
   AdminPageRoute: typeof AdminPageRoute
   StatsPageRoute: typeof StatsPageRoute
+  ApiAdminArticlesRouteRoute: typeof ApiAdminArticlesRouteRouteWithChildren
   ApiAdminAuthRouteRoute: typeof ApiAdminAuthRouteRoute
+  ApiAdminConfigRouteRoute: typeof ApiAdminConfigRouteRoute
+  ApiAdminCookieStatusRouteRoute: typeof ApiAdminCookieStatusRouteRoute
+  ApiCronCheckCookieRouteRoute: typeof ApiCronCheckCookieRouteRoute
   TasksIdPageRoute: typeof TasksIdPageRoute
 }
 
@@ -127,11 +280,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutPageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tasks': {
+      id: '/api/tasks'
+      path: '/api/tasks'
+      fullPath: '/api/tasks'
+      preLoaderRoute: typeof ApiTasksRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stats': {
+      id: '/api/stats'
+      path: '/api/stats'
+      fullPath: '/api/stats'
+      preLoaderRoute: typeof ApiStatsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/crawl': {
+      id: '/api/crawl'
+      path: '/api/crawl'
+      fullPath: '/api/crawl'
+      preLoaderRoute: typeof ApiCrawlRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/articles': {
+      id: '/api/articles'
+      path: '/api/articles'
+      fullPath: '/api/articles'
+      preLoaderRoute: typeof ApiArticlesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tasks/$id/': {
       id: '/tasks/$id/'
       path: '/tasks/$id'
       fullPath: '/tasks/$id/'
       preLoaderRoute: typeof TasksIdPageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/clear-failed': {
+      id: '/api/tasks/clear-failed'
+      path: '/clear-failed'
+      fullPath: '/api/tasks/clear-failed'
+      preLoaderRoute: typeof ApiTasksClearFailedRouteRouteImport
+      parentRoute: typeof ApiTasksRouteRoute
+    }
+    '/api/tasks/$id': {
+      id: '/api/tasks/$id'
+      path: '/$id'
+      fullPath: '/api/tasks/$id'
+      preLoaderRoute: typeof ApiTasksIdRouteRouteImport
+      parentRoute: typeof ApiTasksRouteRoute
+    }
+    '/api/cron/check-cookie': {
+      id: '/api/cron/check-cookie'
+      path: '/api/cron/check-cookie'
+      fullPath: '/api/cron/check-cookie'
+      preLoaderRoute: typeof ApiCronCheckCookieRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/cookie-status': {
+      id: '/api/admin/cookie-status'
+      path: '/api/admin/cookie-status'
+      fullPath: '/api/admin/cookie-status'
+      preLoaderRoute: typeof ApiAdminCookieStatusRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/config': {
+      id: '/api/admin/config'
+      path: '/api/admin/config'
+      fullPath: '/api/admin/config'
+      preLoaderRoute: typeof ApiAdminConfigRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/auth': {
@@ -141,15 +357,64 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminAuthRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/articles': {
+      id: '/api/admin/articles'
+      path: '/api/admin/articles'
+      fullPath: '/api/admin/articles'
+      preLoaderRoute: typeof ApiAdminArticlesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/articles/$id': {
+      id: '/api/admin/articles/$id'
+      path: '/$id'
+      fullPath: '/api/admin/articles/$id'
+      preLoaderRoute: typeof ApiAdminArticlesIdRouteRouteImport
+      parentRoute: typeof ApiAdminArticlesRouteRoute
+    }
   }
 }
 
+interface ApiTasksRouteRouteChildren {
+  ApiTasksIdRouteRoute: typeof ApiTasksIdRouteRoute
+  ApiTasksClearFailedRouteRoute: typeof ApiTasksClearFailedRouteRoute
+}
+
+const ApiTasksRouteRouteChildren: ApiTasksRouteRouteChildren = {
+  ApiTasksIdRouteRoute: ApiTasksIdRouteRoute,
+  ApiTasksClearFailedRouteRoute: ApiTasksClearFailedRouteRoute,
+}
+
+const ApiTasksRouteRouteWithChildren = ApiTasksRouteRoute._addFileChildren(
+  ApiTasksRouteRouteChildren,
+)
+
+interface ApiAdminArticlesRouteRouteChildren {
+  ApiAdminArticlesIdRouteRoute: typeof ApiAdminArticlesIdRouteRoute
+}
+
+const ApiAdminArticlesRouteRouteChildren: ApiAdminArticlesRouteRouteChildren = {
+  ApiAdminArticlesIdRouteRoute: ApiAdminArticlesIdRouteRoute,
+}
+
+const ApiAdminArticlesRouteRouteWithChildren =
+  ApiAdminArticlesRouteRoute._addFileChildren(
+    ApiAdminArticlesRouteRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   PageRoute: PageRoute,
+  ApiArticlesRouteRoute: ApiArticlesRouteRoute,
+  ApiCrawlRouteRoute: ApiCrawlRouteRoute,
+  ApiStatsRouteRoute: ApiStatsRouteRoute,
+  ApiTasksRouteRoute: ApiTasksRouteRouteWithChildren,
   AboutPageRoute: AboutPageRoute,
   AdminPageRoute: AdminPageRoute,
   StatsPageRoute: StatsPageRoute,
+  ApiAdminArticlesRouteRoute: ApiAdminArticlesRouteRouteWithChildren,
   ApiAdminAuthRouteRoute: ApiAdminAuthRouteRoute,
+  ApiAdminConfigRouteRoute: ApiAdminConfigRouteRoute,
+  ApiAdminCookieStatusRouteRoute: ApiAdminCookieStatusRouteRoute,
+  ApiCronCheckCookieRouteRoute: ApiCronCheckCookieRouteRoute,
   TasksIdPageRoute: TasksIdPageRoute,
 }
 export const routeTree = rootRouteImport

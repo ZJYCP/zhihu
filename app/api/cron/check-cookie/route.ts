@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
+import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/api-error";
+import { handleApiError, jsonResponse } from "@/lib/api-response";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 // GET /api/cron/check-cookie - 检查 Cookie 可用性
-export async function GET() {
+async function checkCookie() {
   let success = false;
   let message = "";
 
@@ -59,5 +59,13 @@ export async function GET() {
     return handleApiError(dbError, "保存检查结果失败");
   }
 
-  return NextResponse.json({ success, message, checkedAt: new Date() });
+  return jsonResponse({ success, message, checkedAt: new Date() });
 }
+
+export const Route = createFileRoute("/api/cron/check-cookie")({
+  server: {
+    handlers: {
+      GET: async () => checkCookie(),
+    },
+  },
+});

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/prisma";
-import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
 import { requireAdminRequest } from "@/lib/admin-auth";
 
 // GET /api/admin/config - 获取配置
-export async function GET(request: NextRequest) {
+async function getAdminConfig(request: Request) {
   try {
     const authError = requireAdminRequest(request);
     if (authError) return authError;
@@ -16,12 +16,12 @@ export async function GET(request: NextRequest) {
       const config = await prisma.systemConfig.findUnique({
         where: { key },
       });
-      return NextResponse.json(config);
+      return jsonResponse(config);
     }
 
     // 返回所有配置（隐藏敏感值）
     const configs = await prisma.systemConfig.findMany();
-    return NextResponse.json(
+    return jsonResponse(
       configs.map((c) => ({
         ...c,
         value: c.key === "zhihu_cookie" ? maskCookie(c.value) : c.value,
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/admin/config - 更新配置
-export async function POST(request: NextRequest) {
+async function updateAdminConfig(request: Request) {
   try {
     const authError = requireAdminRequest(request);
     if (authError) return authError;
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       create: { key, value },
     });
 
-    return NextResponse.json({
+    return jsonResponse({
       ...config,
       value: key === "zhihu_cookie" ? maskCookie(config.value) : config.value,
     });
@@ -70,3 +70,12 @@ function maskCookie(cookie: string): string {
   if (cookie.length <= 20) return "***";
   return cookie.slice(0, 10) + "..." + cookie.slice(-10);
 }
+
+export const Route = createFileRoute("/api/admin/config")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => getAdminConfig(request),
+      POST: async ({ request }) => updateAdminConfig(request),
+    },
+  },
+});

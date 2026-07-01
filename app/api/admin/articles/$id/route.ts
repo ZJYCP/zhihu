@@ -1,18 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/prisma";
-import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
 import { requireAdminRequest } from "@/lib/admin-auth";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
 
-// GET /api/admin/articles/[id] - 获取单个文章详情
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// GET /api/admin/articles/$id - 获取单个文章详情
+async function getAdminArticle(request: Request, id: string) {
   try {
     const authError = requireAdminRequest(request);
     if (authError) return authError;
-
-    const { id } = await params;
 
     const article = await prisma.crawlTask.findUnique({
       where: { id },
@@ -22,22 +17,18 @@ export async function GET(
       return errorResponse("文章不存在", 404, "NOT_FOUND");
     }
 
-    return NextResponse.json(article);
+    return jsonResponse(article);
   } catch (error) {
     return handleApiError(error, "获取文章详情失败");
   }
 }
 
-// PUT /api/admin/articles/[id] - 更新文章
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// PUT /api/admin/articles/$id - 更新文章
+async function updateAdminArticle(request: Request, id: string) {
   try {
     const authError = requireAdminRequest(request);
     if (authError) return authError;
 
-    const { id } = await params;
     const body = await safeParseJson<Record<string, unknown>>(request);
 
     if (!body) {
@@ -63,26 +54,31 @@ export async function PUT(
       data: updateData,
     });
 
-    return NextResponse.json(article);
+    return jsonResponse(article);
   } catch (error) {
     return handleApiError(error, "更新文章失败");
   }
 }
 
-// DELETE /api/admin/articles/[id] - 删除单个文章
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// DELETE /api/admin/articles/$id - 删除单个文章
+async function deleteAdminArticle(request: Request, id: string) {
   try {
     const authError = requireAdminRequest(request);
     if (authError) return authError;
 
-    const { id } = await params;
-
     await prisma.crawlTask.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+    return jsonResponse({ success: true });
   } catch (error) {
     return handleApiError(error, "删除文章失败");
   }
 }
+
+export const Route = createFileRoute("/api/admin/articles/$id")({
+  server: {
+    handlers: {
+      GET: async ({ request, params }) => getAdminArticle(request, params.id),
+      PUT: async ({ request, params }) => updateAdminArticle(request, params.id),
+      DELETE: async ({ request, params }) => deleteAdminArticle(request, params.id),
+    },
+  },
+});

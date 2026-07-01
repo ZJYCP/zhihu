@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/api-error";
+import { handleApiError, jsonResponse } from "@/lib/api-response";
 import { requireAdminRequest } from "@/lib/admin-auth";
 
 // GET /api/admin/cookie-status - 获取 Cookie 检查状态
-export async function GET(request: Request) {
+async function getCookieStatus(request: Request) {
   try {
     const authError = requireAdminRequest(request);
     if (authError) return authError;
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     const successCount = logs.filter((l) => l.success).length;
     const successRate = logs.length > 0 ? (successCount / logs.length) * 100 : 0;
 
-    return NextResponse.json({
+    return jsonResponse({
       latest: latest
         ? {
             success: latest.success,
@@ -44,3 +44,11 @@ export async function GET(request: Request) {
     return handleApiError(error, "获取 Cookie 状态失败");
   }
 }
+
+export const Route = createFileRoute("/api/admin/cookie-status")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => getCookieStatus(request),
+    },
+  },
+});
