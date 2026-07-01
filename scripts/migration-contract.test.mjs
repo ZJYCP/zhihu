@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 
 /* global console */
 
@@ -10,6 +10,30 @@ const rootRoute = readFileSync("app/__root.tsx", "utf8");
 const router = readFileSync("router.tsx", "utf8");
 const prismaSchema = readFileSync("prisma/schema.prisma", "utf8");
 const viteConfig = readFileSync("vite.config.ts", "utf8");
+
+function collectServerBundleFiles(directory) {
+  if (!existsSync(directory)) {
+    return [];
+  }
+
+  const files = [];
+
+  for (const entry of readdirSync(directory)) {
+    const entryPath = `${directory}/${entry}`;
+    const stats = statSync(entryPath);
+
+    if (stats.isDirectory()) {
+      files.push(...collectServerBundleFiles(entryPath));
+      continue;
+    }
+
+    if (entryPath.endsWith(".mjs") || entryPath.endsWith(".js")) {
+      files.push(entryPath);
+    }
+  }
+
+  return files;
+}
 
 assert.equal(
   aboutPage.includes("/api/admin/"),
@@ -102,17 +126,31 @@ assert.match(
   "admin panel should read feedback from the protected admin feedback API",
 );
 
-assert.match(
+assert.doesNotMatch(
   viteConfig,
   /external:\s*\[[\s\S]*@prisma\\\/client/,
-  "Nitro must externalize @prisma/client because Prisma Client uses CommonJS runtime globals",
+  "Nitro must not externalize @prisma/client because Vercel serverless output needs Prisma bundled",
 );
+if (existsSync(".output/server")) {
+  assert.equal(
+    existsSync(".output/server/_libs/@prisma/client.mjs"),
+    true,
+    "production build should bundle Prisma Client for Vercel serverless runtime",
+  );
 
-assert.equal(
-  existsSync(".output/server/_libs/@prisma/client.mjs"),
-  false,
-  "production build must not inline @prisma/client into the ESM server bundle",
-);
+  const barePrismaImports = collectServerBundleFiles(".output/server").filter(
+    (filePath) =>
+      /from\s+["']@prisma\/client["']|import\s*\(\s*["']@prisma\/client["']\s*\)/.test(
+        readFileSync(filePath, "utf8"),
+      ),
+  );
+
+  assert.deepEqual(
+    barePrismaImports,
+    [],
+    "production server bundle must not contain bare @prisma/client imports",
+  );
+}
 assert.equal(
   existsSync(".output/server/_libs/sharp.mjs"),
   false,

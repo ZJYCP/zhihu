@@ -21,6 +21,7 @@
     "db:push": "prisma db push",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:baseline": "prisma migrate resolve --applied 20260701000000_baseline_existing_schema",
     "db:studio": "prisma studio",
     "crawl": "tsx src/cli/index.ts",
     "import": "tsx scripts/import-articles.ts"

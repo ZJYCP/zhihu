@@ -24,13 +24,11 @@ export default defineConfig({
       noExternals: true,
       rolldownConfig: {
         external: [
-          /^@prisma\/client(\/.*)?$/,
           /^sharp(\/.*)?$/,
         ],
       },
       rollupConfig: {
         external: [
-          /^@prisma\/client(\/.*)?$/,
           /^sharp(\/.*)?$/,
         ],
       },
