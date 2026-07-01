@@ -23,6 +23,7 @@ import { Route as ApiTasksIdRouteRouteImport } from './app/api/tasks/$id/route'
 import { Route as ApiCronCheckCookieRouteRouteImport } from './app/api/cron/check-cookie/route'
 import { Route as ApiAdminCookieStatusRouteRouteImport } from './app/api/admin/cookie-status/route'
 import { Route as ApiAdminConfigRouteRouteImport } from './app/api/admin/config/route'
+import { Route as ApiAdminCheckCookieRouteRouteImport } from './app/api/admin/check-cookie/route'
 import { Route as ApiAdminAuthRouteRouteImport } from './app/api/admin/auth/route'
 import { Route as ApiAdminArticlesRouteRouteImport } from './app/api/admin/articles/route'
 import { Route as ApiAdminArticlesIdRouteRouteImport } from './app/api/admin/articles/$id/route'
@@ -99,6 +100,12 @@ const ApiAdminConfigRouteRoute = ApiAdminConfigRouteRouteImport.update({
   path: '/api/admin/config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminCheckCookieRouteRoute =
+  ApiAdminCheckCookieRouteRouteImport.update({
+    id: '/api/admin/check-cookie',
+    path: '/api/admin/check-cookie',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAdminAuthRouteRoute = ApiAdminAuthRouteRouteImport.update({
   id: '/api/admin/auth',
   path: '/api/admin/auth',
@@ -126,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/stats/': typeof StatsPageRoute
   '/api/admin/articles': typeof ApiAdminArticlesRouteRouteWithChildren
   '/api/admin/auth': typeof ApiAdminAuthRouteRoute
+  '/api/admin/check-cookie': typeof ApiAdminCheckCookieRouteRoute
   '/api/admin/config': typeof ApiAdminConfigRouteRoute
   '/api/admin/cookie-status': typeof ApiAdminCookieStatusRouteRoute
   '/api/cron/check-cookie': typeof ApiCronCheckCookieRouteRoute
@@ -145,6 +153,7 @@ export interface FileRoutesByTo {
   '/stats': typeof StatsPageRoute
   '/api/admin/articles': typeof ApiAdminArticlesRouteRouteWithChildren
   '/api/admin/auth': typeof ApiAdminAuthRouteRoute
+  '/api/admin/check-cookie': typeof ApiAdminCheckCookieRouteRoute
   '/api/admin/config': typeof ApiAdminConfigRouteRoute
   '/api/admin/cookie-status': typeof ApiAdminCookieStatusRouteRoute
   '/api/cron/check-cookie': typeof ApiCronCheckCookieRouteRoute
@@ -165,6 +174,7 @@ export interface FileRoutesById {
   '/stats/': typeof StatsPageRoute
   '/api/admin/articles': typeof ApiAdminArticlesRouteRouteWithChildren
   '/api/admin/auth': typeof ApiAdminAuthRouteRoute
+  '/api/admin/check-cookie': typeof ApiAdminCheckCookieRouteRoute
   '/api/admin/config': typeof ApiAdminConfigRouteRoute
   '/api/admin/cookie-status': typeof ApiAdminCookieStatusRouteRoute
   '/api/cron/check-cookie': typeof ApiCronCheckCookieRouteRoute
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/stats/'
     | '/api/admin/articles'
     | '/api/admin/auth'
+    | '/api/admin/check-cookie'
     | '/api/admin/config'
     | '/api/admin/cookie-status'
     | '/api/cron/check-cookie'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/admin/articles'
     | '/api/admin/auth'
+    | '/api/admin/check-cookie'
     | '/api/admin/config'
     | '/api/admin/cookie-status'
     | '/api/cron/check-cookie'
@@ -224,6 +236,7 @@ export interface FileRouteTypes {
     | '/stats/'
     | '/api/admin/articles'
     | '/api/admin/auth'
+    | '/api/admin/check-cookie'
     | '/api/admin/config'
     | '/api/admin/cookie-status'
     | '/api/cron/check-cookie'
@@ -244,6 +257,7 @@ export interface RootRouteChildren {
   StatsPageRoute: typeof StatsPageRoute
   ApiAdminArticlesRouteRoute: typeof ApiAdminArticlesRouteRouteWithChildren
   ApiAdminAuthRouteRoute: typeof ApiAdminAuthRouteRoute
+  ApiAdminCheckCookieRouteRoute: typeof ApiAdminCheckCookieRouteRoute
   ApiAdminConfigRouteRoute: typeof ApiAdminConfigRouteRoute
   ApiAdminCookieStatusRouteRoute: typeof ApiAdminCookieStatusRouteRoute
   ApiCronCheckCookieRouteRoute: typeof ApiCronCheckCookieRouteRoute
@@ -350,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminConfigRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/check-cookie': {
+      id: '/api/admin/check-cookie'
+      path: '/api/admin/check-cookie'
+      fullPath: '/api/admin/check-cookie'
+      preLoaderRoute: typeof ApiAdminCheckCookieRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/auth': {
       id: '/api/admin/auth'
       path: '/api/admin/auth'
@@ -412,6 +433,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatsPageRoute: StatsPageRoute,
   ApiAdminArticlesRouteRoute: ApiAdminArticlesRouteRouteWithChildren,
   ApiAdminAuthRouteRoute: ApiAdminAuthRouteRoute,
+  ApiAdminCheckCookieRouteRoute: ApiAdminCheckCookieRouteRoute,
   ApiAdminConfigRouteRoute: ApiAdminConfigRouteRoute,
   ApiAdminCookieStatusRouteRoute: ApiAdminCookieStatusRouteRoute,
   ApiCronCheckCookieRouteRoute: ApiCronCheckCookieRouteRoute,

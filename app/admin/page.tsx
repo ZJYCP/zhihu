@@ -44,9 +44,15 @@ interface CookieStatus {
   logs: { success: boolean; checkedAt: string }[];
 }
 
-interface ConfigResponse {
+interface ConfigItem {
   key: string;
   value: string;
+  maskedValue: string;
+  label: string;
+  description: string;
+  defaultValue: string;
+  sensitive: boolean;
+  kind: "string" | "number" | "secret";
 }
 
 interface AuthResponse {
@@ -461,22 +467,42 @@ function ArticleManager() {
 
 // 系统设置组件
 function SettingsManager() {
-  const [cookie, setCookie] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [configs, setConfigs] = useState<ConfigItem[]>([]);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
   const [cookieStatus, setCookieStatus] = useState<CookieStatus | null>(null);
   const [checking, setChecking] = useState(false);
 
-  useEffect(() => {
-    // 获取当前配置
-    apiGet<ConfigResponse>("/api/admin/config?key=zhihu_cookie", false).then((result) => {
-      if (result.success && result.data?.value) {
-        setCookie(result.data.value);
-      }
-    });
+  const fetchConfigs = useCallback(async () => {
+    const result = await apiGet<ConfigItem[]>("/api/admin/config", false);
+    if (result.success) {
+      setConfigs(result.data);
+      setValues(
+        Object.fromEntries(result.data.map((config) => [config.key, config.value]))
+      );
 
-    // 获取 Cookie 状态
-    fetchCookieStatus();
+      const sensitiveConfigs = result.data.filter((config) => config.sensitive);
+      const sensitiveValues = await Promise.all(
+        sensitiveConfigs.map(async (config) => {
+          const detail = await apiGet<ConfigItem>(
+            `/api/admin/config?key=${encodeURIComponent(config.key)}`,
+            false
+          );
+          return [config.key, detail.success ? detail.data.value : ""] as const;
+        })
+      );
+
+      setValues((current) => ({
+        ...current,
+        ...Object.fromEntries(sensitiveValues),
+      }));
+    }
   }, []);
+
+  useEffect(() => {
+    fetchConfigs();
+    fetchCookieStatus();
+  }, [fetchConfigs]);
 
   const fetchCookieStatus = async () => {
     const result = await apiGet<CookieStatus>("/api/admin/cookie-status", false);
@@ -485,18 +511,28 @@ function SettingsManager() {
     }
   };
 
-  const saveCookie = async () => {
-    setSaving(true);
-    const result = await apiPost("/api/admin/config", { key: "zhihu_cookie", value: cookie });
-    setSaving(false);
+  const saveConfig = async (key: string) => {
+    setSavingKey(key);
+    const result = await apiPost<ConfigItem>("/api/admin/config", {
+      key,
+      value: values[key] ?? "",
+    });
+    setSavingKey(null);
     if (result.success) {
-      toast.success("Cookie 保存成功");
+      toast.success("配置已保存");
+      setConfigs((current) =>
+        current.map((config) => (config.key === key ? result.data : config))
+      );
+      setValues((current) => ({
+        ...current,
+        [key]: result.data.sensitive ? values[key] ?? "" : result.data.value,
+      }));
     }
   };
 
   const checkCookieNow = async () => {
     setChecking(true);
-    const result = await apiGet("/api/cron/check-cookie", false);
+    const result = await apiGet("/api/admin/check-cookie", false);
     await fetchCookieStatus();
     setChecking(false);
     if (result.success) {
@@ -506,28 +542,66 @@ function SettingsManager() {
 
   return (
     <div className="space-y-6">
-      {/* Cookie 配置 */}
+      {/* 运行时配置 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Cookie 配置</CardTitle>
+          <CardTitle className="text-lg">运行时配置</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm text-[hsl(var(--muted-foreground))] mb-2 block">
-              知乎 Cookie
-            </label>
-            <textarea
-              value={cookie}
-              onChange={(e) => setCookie(e.target.value)}
-              className="w-full h-32 p-3 border rounded-lg bg-[hsl(var(--background))] text-sm font-mono resize-none"
-              placeholder="粘贴你的知乎 Cookie..."
-            />
-          </div>
+        <CardContent className="space-y-5">
+          {configs.map((config) => (
+            <div key={config.key} className="border-b pb-5 last:border-b-0 last:pb-0">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div>
+                  <label className="text-sm font-medium">{config.label}</label>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    {config.description}
+                  </p>
+                </div>
+                {config.sensitive && config.maskedValue && (
+                  <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                    当前：{config.maskedValue}
+                  </span>
+                )}
+              </div>
+              {config.sensitive || config.key === "crawler_user_agent" ? (
+                <textarea
+                  value={values[config.key] ?? ""}
+                  onChange={(e) =>
+                    setValues((current) => ({
+                      ...current,
+                      [config.key]: e.target.value,
+                    }))
+                  }
+                  className="w-full h-24 p-3 border rounded-lg bg-[hsl(var(--background))] text-sm font-mono resize-none"
+                  placeholder={config.defaultValue || config.label}
+                />
+              ) : (
+                <Input
+                  type={config.kind === "number" ? "number" : "text"}
+                  value={values[config.key] ?? ""}
+                  onChange={(e) =>
+                    setValues((current) => ({
+                      ...current,
+                      [config.key]: e.target.value,
+                    }))
+                  }
+                  placeholder={config.defaultValue}
+                />
+              )}
+              <div className="mt-2 flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={() => saveConfig(config.key)}
+                  disabled={savingKey === config.key}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {savingKey === config.key ? "保存中..." : "保存"}
+                </Button>
+              </div>
+            </div>
+          ))}
+
           <div className="flex gap-2">
-            <Button onClick={saveCookie} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? "保存中..." : "保存 Cookie"}
-            </Button>
             <Button variant="outline" onClick={checkCookieNow} disabled={checking}>
               <RefreshCw className={`h-4 w-4 mr-2 ${checking ? "animate-spin" : ""}`} />
               立即检查

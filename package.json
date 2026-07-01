@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "test:auth": "tsx scripts/admin-auth.test.ts",
     "test:api-routes": "tsx scripts/api-routes.test.ts",
+    "test:runtime-config": "tsx scripts/runtime-config.test.ts",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",

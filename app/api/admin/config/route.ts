@@ -2,6 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/prisma";
 import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
 import { requireAdminRequest } from "@/lib/admin-auth";
+import {
+  isRuntimeConfigKey,
+  listRuntimeConfig,
+  serializeConfig,
+  validateConfigValue,
+} from "@/lib/config/runtime-config";
 
 // GET /api/admin/config - 获取配置
 async function getAdminConfig(request: Request) {
@@ -13,20 +19,19 @@ async function getAdminConfig(request: Request) {
     const key = searchParams.get("key");
 
     if (key) {
+      if (!isRuntimeConfigKey(key)) {
+        return errorResponse("未知配置项", 404, "CONFIG_NOT_FOUND");
+      }
+
       const config = await prisma.systemConfig.findUnique({
         where: { key },
       });
-      return jsonResponse(config);
+      return jsonResponse(
+        serializeConfig(key, config?.value ?? "", { revealValue: true })
+      );
     }
 
-    // 返回所有配置（隐藏敏感值）
-    const configs = await prisma.systemConfig.findMany();
-    return jsonResponse(
-      configs.map((c) => ({
-        ...c,
-        value: c.key === "zhihu_cookie" ? maskCookie(c.value) : c.value,
-      }))
-    );
+    return jsonResponse(await listRuntimeConfig());
   } catch (error) {
     return handleApiError(error, "获取配置失败");
   }
@@ -50,25 +55,25 @@ async function updateAdminConfig(request: Request) {
       return errorResponse("key 和 value 不能为空", 400);
     }
 
+    if (!isRuntimeConfigKey(key)) {
+      return errorResponse("未知配置项", 400, "CONFIG_NOT_ALLOWED");
+    }
+
+    const validationError = validateConfigValue(key, value);
+    if (validationError) {
+      return errorResponse(validationError, 400, "INVALID_CONFIG_VALUE");
+    }
+
     const config = await prisma.systemConfig.upsert({
       where: { key },
       update: { value },
       create: { key, value },
     });
 
-    return jsonResponse({
-      ...config,
-      value: key === "zhihu_cookie" ? maskCookie(config.value) : config.value,
-    });
+    return jsonResponse(serializeConfig(key, config.value));
   } catch (error) {
     return handleApiError(error, "更新配置失败");
   }
-}
-
-// 隐藏 Cookie 中间部分
-function maskCookie(cookie: string): string {
-  if (cookie.length <= 20) return "***";
-  return cookie.slice(0, 10) + "..." + cookie.slice(-10);
 }
 
 export const Route = createFileRoute("/api/admin/config")({

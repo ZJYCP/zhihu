@@ -7,6 +7,7 @@ const expectedRoutes = new Map([
   ["admin/articles/$id/route.ts", "/api/admin/articles/$id"],
   ["admin/articles/route.ts", "/api/admin/articles"],
   ["admin/auth/route.ts", "/api/admin/auth"],
+  ["admin/check-cookie/route.ts", "/api/admin/check-cookie"],
   ["admin/config/route.ts", "/api/admin/config"],
   ["admin/cookie-status/route.ts", "/api/admin/cookie-status"],
   ["articles/route.ts", "/api/articles"],
