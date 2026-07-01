@@ -71,6 +71,34 @@ docker compose up -d
 
 更新代码或 Prisma schema 后，先在开发环境生成并提交 Prisma migration，再重新执行 `docker compose build && docker compose up -d`。容器启动时会自动同步数据库结构。
 
+### 已有生产库的 Prisma Migrate 基线
+
+如果生产数据库已经用过 `prisma db push` 或历史版本初始化过，但还没有 `_prisma_migrations` 记录，第一次执行 `prisma migrate deploy` 会报 `P3005: The database schema is not empty`。这是 Prisma 的保护机制，需要先把已有结构标记为基线。
+
+只需要对同一个生产库执行一次：
+
+```bash
+DATABASE_URL="postgresql://..." npm run db:migrate:baseline
+```
+
+基线完成后，再执行部署命令。后续新增表和字段会由 `prisma migrate deploy` 自动应用。
+
+## Vercel 部署
+
+Vercel 不会执行 Dockerfile 的 `CMD`，因此 Build Command 需要显式运行数据库迁移：
+
+```bash
+npm run db:migrate:deploy && npm run build
+```
+
+如果连接的是已有生产库，第一次部署前先在本地或 Vercel CLI 环境执行一次基线命令：
+
+```bash
+DATABASE_URL="postgresql://..." npm run db:migrate:baseline
+```
+
+之后 Vercel 的 Build Command 保持 `npm run db:migrate:deploy && npm run build` 即可。不要在 Preview 环境连接同一个生产库执行迁移。
+
 ## 支持的链接格式
 
 - **问答链接**: `https://www.zhihu.com/question/xxx/answer/xxx`
