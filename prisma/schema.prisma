@@ -20,7 +20,8 @@ model CrawlTask {
   fontDecodeSuccess Boolean  @default(true) // 字体解码是否成功
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  content_preview   String?  @default(dbgenerated("\"left\"(content, 600)"))
+  content_preview   String?
+  feedbacks         ArticleFeedback[]
 
   @@index([status, createdAt])
   @@index([status])
@@ -32,6 +33,32 @@ enum Status {
   RUNNING
   COMPLETED
   FAILED
+}
+
+enum FeedbackStatus {
+  OPEN
+  RESOLVED
+}
+
+enum FeedbackType {
+  INCOMPLETE_CONTENT
+  GARBLED_TEXT
+  MISSING_IMAGE
+  OTHER
+}
+
+model ArticleFeedback {
+  id        String         @id @default(cuid())
+  taskId    String
+  type      FeedbackType
+  content   String
+  status    FeedbackStatus @default(OPEN)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  task      CrawlTask      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@index([status, createdAt])
 }
 
 // 系统配置表（存储 Cookie 等配置）

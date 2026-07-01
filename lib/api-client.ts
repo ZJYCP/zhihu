@@ -1,11 +1,13 @@
 import { toast } from "sonner";
 
+const ADMIN_TOKEN_KEY = "admin_token";
+
 /**
  * API 响应结果类型
  */
 export type ApiResult<T> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string; status?: number; code?: string };
 
 /**
  * API 错误响应格式
@@ -37,23 +39,38 @@ export async function api<T>(
   showError: boolean = true
 ): Promise<ApiResult<T>> {
   try {
+    const headers = new Headers(options?.headers);
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+
+    if (url.startsWith("/api/admin/") && typeof window !== "undefined") {
+      const token = window.localStorage.getItem(ADMIN_TOKEN_KEY);
+      if (token && !headers.has("Authorization")) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+    }
+
     const res = await fetch(url, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
+      headers,
     });
 
-    const data = await res.json();
+    const data = await parseJsonResponse(res);
 
     if (!res.ok) {
+      const errorData = data as ApiErrorResponse | null;
       const errorMessage =
-        (data as ApiErrorResponse).error || `请求失败 (${res.status})`;
+        errorData?.error || `请求失败 (${res.status})`;
       if (showError) {
         toast.error(errorMessage);
       }
-      return { success: false, error: errorMessage };
+      return {
+        success: false,
+        error: errorMessage,
+        status: res.status,
+        code: errorData?.code,
+      };
     }
 
     return { success: true, data: data as T };
@@ -64,6 +81,17 @@ export async function api<T>(
       toast.error(errorMessage);
     }
     return { success: false, error: errorMessage };
+  }
+}
+
+async function parseJsonResponse(res: Response) {
+  const text = await res.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
   }
 }
 

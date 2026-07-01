@@ -1,24 +1,38 @@
-import { NextRequest, NextResponse } from "next/server";
+import { createFileRoute } from "@tanstack/react-router";
+import { createAdminToken } from "@/lib/admin-auth";
+import { errorResponse, safeParseJson, successResponse } from "@/lib/api-response";
 
-export async function POST(request: NextRequest) {
-  const { password } = await request.json();
+export async function handleAdminAuthPost(request: Request) {
+  const body = await safeParseJson<{ password?: string }>(request);
+
+  if (!body) {
+    return errorResponse("请求体格式错误", 400, "JSON_PARSE_ERROR");
+  }
+
   const adminPassword = process.env.ADMIN_PASSWORD;
-
   if (!adminPassword) {
-    return NextResponse.json(
-      { error: "管理密码未配置" },
-      { status: 500 }
-    );
+    return errorResponse("管理密码未配置", 500, "ADMIN_PASSWORD_MISSING");
   }
 
-  if (password === adminPassword) {
-    // 密码正确，返回一个简单的 token（基于密码的 hash）
-    const token = Buffer.from(adminPassword).toString("base64");
-    return NextResponse.json({ success: true, token });
+  const appSecret = process.env.APP_SECRET;
+  if (!appSecret) {
+    return errorResponse("APP_SECRET 未配置", 500, "APP_SECRET_MISSING");
   }
 
-  return NextResponse.json(
-    { error: "密码错误" },
-    { status: 401 }
-  );
+  if (body.password !== adminPassword) {
+    return errorResponse("密码错误", 401, "INVALID_PASSWORD");
+  }
+
+  return successResponse({
+    success: true,
+    token: createAdminToken(appSecret),
+  });
 }
+
+export const Route = createFileRoute("/api/admin/auth")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => handleAdminAuthPost(request),
+    },
+  },
+});

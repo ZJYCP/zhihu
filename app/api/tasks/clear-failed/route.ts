@@ -1,15 +1,23 @@
-import { NextResponse } from "next/server";
+import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/api-error";
+import { handleApiError, jsonResponse } from "@/lib/api-response";
 
 // DELETE /api/tasks/clear-failed - 清理所有失败任务
-export async function DELETE() {
+async function clearFailedTasks() {
   try {
     const result = await prisma.crawlTask.deleteMany({
       where: { status: "FAILED" },
     });
-    return NextResponse.json({ success: true, deleted: result.count });
+    return jsonResponse({ success: true, deleted: result.count });
   } catch (error) {
     return handleApiError(error, "清理失败任务失败");
   }
 }
+
+export const Route = createFileRoute("/api/tasks/clear-failed")({
+  server: {
+    handlers: {
+      DELETE: async () => clearFailedTasks(),
+    },
+  },
+});

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,8 @@ import {
   Settings,
   FileText,
   Lock,
+  MessageSquare,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
@@ -43,10 +46,49 @@ interface CookieStatus {
   logs: { success: boolean; checkedAt: string }[];
 }
 
-interface ConfigResponse {
+interface ConfigItem {
   key: string;
   value: string;
+  maskedValue: string;
+  label: string;
+  description: string;
+  defaultValue: string;
+  sensitive: boolean;
+  kind: "string" | "number" | "secret";
 }
+
+interface FeedbackItem {
+  id: string;
+  type: FeedbackType;
+  content: string;
+  status: FeedbackStatus;
+  createdAt: string;
+  task: {
+    id: string;
+    title: string | null;
+    author: string | null;
+    url: string;
+  };
+}
+
+interface FeedbackResponse {
+  feedback: FeedbackItem[];
+  totalPages: number;
+}
+
+type FeedbackStatus = "OPEN" | "RESOLVED";
+type FeedbackType =
+  | "INCOMPLETE_CONTENT"
+  | "GARBLED_TEXT"
+  | "MISSING_IMAGE"
+  | "OTHER";
+
+const FEEDBACK_TYPE_LABELS: Record<FeedbackType, string> = {
+  INCOMPLETE_CONTENT: "内容不完整",
+  GARBLED_TEXT: "内容乱码",
+  MISSING_IMAGE: "图片缺失",
+  OTHER: "其他",
+};
 
 interface AuthResponse {
   token: string;
@@ -54,12 +96,23 @@ interface AuthResponse {
 
 const AUTH_KEY = "admin_token";
 
-export default function AdminPage() {
+export const Route = createFileRoute("/admin/")({
+  head: () => ({
+    meta: [
+      { title: "管理后台 | 拾盐记" },
+      { name: "description", content: "拾盐记内容采集管理后台" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
+  component: AdminPage,
+});
+
+function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"articles" | "settings">("articles");
+  const [activeTab, setActiveTab] = useState<"articles" | "feedback" | "settings">("articles");
 
   // 检查是否已登录
   useEffect(() => {
@@ -161,9 +214,19 @@ export default function AdminPage() {
           <Settings className="h-4 w-4" />
           系统设置
         </Button>
+        <Button
+          variant={activeTab === "feedback" ? "default" : "outline"}
+          onClick={() => setActiveTab("feedback")}
+          className="gap-2"
+        >
+          <MessageSquare className="h-4 w-4" />
+          反馈管理
+        </Button>
       </div>
 
-      {activeTab === "articles" ? <ArticleManager /> : <SettingsManager />}
+      {activeTab === "articles" && <ArticleManager />}
+      {activeTab === "feedback" && <FeedbackManager />}
+      {activeTab === "settings" && <SettingsManager />}
     </main>
   );
 }
@@ -447,24 +510,190 @@ function ArticleManager() {
   );
 }
 
+function FeedbackManager() {
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [status, setStatus] = useState<FeedbackStatus | "">("OPEN");
+
+  const fetchFeedback = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: "20",
+    });
+    if (status) params.set("status", status);
+
+    const result = await apiGet<FeedbackResponse>(
+      `/api/admin/feedback?${params}`,
+      false
+    );
+    if (result.success) {
+      setFeedback(result.data.feedback);
+      setTotalPages(result.data.totalPages);
+    }
+    setLoading(false);
+  }, [page, status]);
+
+  useEffect(() => {
+    fetchFeedback();
+  }, [fetchFeedback]);
+
+  const markResolved = async (id: string) => {
+    const result = await apiPut(`/api/admin/feedback/${id}`, {
+      status: "RESOLVED",
+    });
+    if (result.success) {
+      toast.success("反馈已标记为已处理");
+      fetchFeedback();
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">反馈管理</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value as FeedbackStatus | "");
+              setPage(1);
+            }}
+            className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm"
+          >
+            <option value="">全部反馈</option>
+            <option value="OPEN">待处理</option>
+            <option value="RESOLVED">已处理</option>
+          </select>
+          <Button variant="outline" onClick={fetchFeedback} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {feedback.map((item) => (
+            <div
+              key={item.id}
+              className="rounded-lg border border-[hsl(var(--border))] p-4"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs ${
+                        item.status === "OPEN"
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+                          : "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                      }`}
+                    >
+                      {item.status === "OPEN" ? "待处理" : "已处理"}
+                    </span>
+                    <span className="rounded bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">
+                      {FEEDBACK_TYPE_LABELS[item.type]}
+                    </span>
+                    <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                      {new Date(item.createdAt).toLocaleString("zh-CN")}
+                    </span>
+                  </div>
+                  <p className="font-medium line-clamp-1">
+                    {item.task.title || item.task.url}
+                  </p>
+                  {item.task.author && (
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                      {item.task.author}
+                    </p>
+                  )}
+                </div>
+                {item.status === "OPEN" && (
+                  <Button size="sm" onClick={() => markResolved(item.id)}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    标记已处理
+                  </Button>
+                )}
+              </div>
+              <p className="mt-3 whitespace-pre-wrap text-sm text-[hsl(var(--foreground))]">
+                {item.content}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {!loading && feedback.length === 0 && (
+          <p className="py-8 text-center text-sm text-[hsl(var(--muted-foreground))]">
+            暂无反馈
+          </p>
+        )}
+
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-[hsl(var(--muted-foreground))]">
+            第 {page} / {totalPages} 页
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+            >
+              上一页
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              下一页
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // 系统设置组件
 function SettingsManager() {
-  const [cookie, setCookie] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [configs, setConfigs] = useState<ConfigItem[]>([]);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
   const [cookieStatus, setCookieStatus] = useState<CookieStatus | null>(null);
   const [checking, setChecking] = useState(false);
 
-  useEffect(() => {
-    // 获取当前配置
-    apiGet<ConfigResponse>("/api/admin/config?key=zhihu_cookie", false).then((result) => {
-      if (result.success && result.data?.value) {
-        setCookie(result.data.value);
-      }
-    });
+  const fetchConfigs = useCallback(async () => {
+    const result = await apiGet<ConfigItem[]>("/api/admin/config", false);
+    if (result.success) {
+      setConfigs(result.data);
+      setValues(
+        Object.fromEntries(result.data.map((config) => [config.key, config.value]))
+      );
 
-    // 获取 Cookie 状态
-    fetchCookieStatus();
+      const sensitiveConfigs = result.data.filter((config) => config.sensitive);
+      const sensitiveValues = await Promise.all(
+        sensitiveConfigs.map(async (config) => {
+          const detail = await apiGet<ConfigItem>(
+            `/api/admin/config?key=${encodeURIComponent(config.key)}`,
+            false
+          );
+          return [config.key, detail.success ? detail.data.value : ""] as const;
+        })
+      );
+
+      setValues((current) => ({
+        ...current,
+        ...Object.fromEntries(sensitiveValues),
+      }));
+    }
   }, []);
+
+  useEffect(() => {
+    fetchConfigs();
+    fetchCookieStatus();
+  }, [fetchConfigs]);
 
   const fetchCookieStatus = async () => {
     const result = await apiGet<CookieStatus>("/api/admin/cookie-status", false);
@@ -473,18 +702,28 @@ function SettingsManager() {
     }
   };
 
-  const saveCookie = async () => {
-    setSaving(true);
-    const result = await apiPost("/api/admin/config", { key: "zhihu_cookie", value: cookie });
-    setSaving(false);
+  const saveConfig = async (key: string) => {
+    setSavingKey(key);
+    const result = await apiPost<ConfigItem>("/api/admin/config", {
+      key,
+      value: values[key] ?? "",
+    });
+    setSavingKey(null);
     if (result.success) {
-      toast.success("Cookie 保存成功");
+      toast.success("配置已保存");
+      setConfigs((current) =>
+        current.map((config) => (config.key === key ? result.data : config))
+      );
+      setValues((current) => ({
+        ...current,
+        [key]: result.data.sensitive ? values[key] ?? "" : result.data.value,
+      }));
     }
   };
 
   const checkCookieNow = async () => {
     setChecking(true);
-    const result = await apiGet("/api/cron/check-cookie", false);
+    const result = await apiGet("/api/admin/check-cookie", false);
     await fetchCookieStatus();
     setChecking(false);
     if (result.success) {
@@ -494,28 +733,66 @@ function SettingsManager() {
 
   return (
     <div className="space-y-6">
-      {/* Cookie 配置 */}
+      {/* 运行时配置 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Cookie 配置</CardTitle>
+          <CardTitle className="text-lg">运行时配置</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm text-[hsl(var(--muted-foreground))] mb-2 block">
-              知乎 Cookie
-            </label>
-            <textarea
-              value={cookie}
-              onChange={(e) => setCookie(e.target.value)}
-              className="w-full h-32 p-3 border rounded-lg bg-[hsl(var(--background))] text-sm font-mono resize-none"
-              placeholder="粘贴你的知乎 Cookie..."
-            />
-          </div>
+        <CardContent className="space-y-5">
+          {configs.map((config) => (
+            <div key={config.key} className="border-b pb-5 last:border-b-0 last:pb-0">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div>
+                  <label className="text-sm font-medium">{config.label}</label>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    {config.description}
+                  </p>
+                </div>
+                {config.sensitive && config.maskedValue && (
+                  <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                    当前：{config.maskedValue}
+                  </span>
+                )}
+              </div>
+              {config.sensitive || config.key === "crawler_user_agent" ? (
+                <textarea
+                  value={values[config.key] ?? ""}
+                  onChange={(e) =>
+                    setValues((current) => ({
+                      ...current,
+                      [config.key]: e.target.value,
+                    }))
+                  }
+                  className="w-full h-24 p-3 border rounded-lg bg-[hsl(var(--background))] text-sm font-mono resize-none"
+                  placeholder={config.defaultValue || config.label}
+                />
+              ) : (
+                <Input
+                  type={config.kind === "number" ? "number" : "text"}
+                  value={values[config.key] ?? ""}
+                  onChange={(e) =>
+                    setValues((current) => ({
+                      ...current,
+                      [config.key]: e.target.value,
+                    }))
+                  }
+                  placeholder={config.defaultValue}
+                />
+              )}
+              <div className="mt-2 flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={() => saveConfig(config.key)}
+                  disabled={savingKey === config.key}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {savingKey === config.key ? "保存中..." : "保存"}
+                </Button>
+              </div>
+            </div>
+          ))}
+
           <div className="flex gap-2">
-            <Button onClick={saveCookie} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? "保存中..." : "保存 Cookie"}
-            </Button>
             <Button variant="outline" onClick={checkCookieNow} disabled={checking}>
               <RefreshCw className={`h-4 w-4 mr-2 ${checking ? "animate-spin" : ""}`} />
               立即检查

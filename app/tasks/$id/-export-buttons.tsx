@@ -55,12 +55,12 @@ ${content}
   };
 
   return (
-    <div className="flex gap-3">
-      <Button variant="outline" onClick={exportMarkdown}>
+    <div className="flex shrink-0 flex-nowrap gap-3">
+      <Button variant="outline" onClick={exportMarkdown} className="whitespace-nowrap">
         <Download className="h-4 w-4 mr-2" />
         导出 Markdown
       </Button>
-      <Button variant="outline" onClick={exportText}>
+      <Button variant="outline" onClick={exportText} className="whitespace-nowrap">
         <Download className="h-4 w-4 mr-2" />
         导出文本
       </Button>

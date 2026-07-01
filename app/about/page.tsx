@@ -1,7 +1,4 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import Image from "next/image"
+import { createFileRoute } from "@tanstack/react-router"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   AlertTriangle,
@@ -11,29 +8,23 @@ import {
   Copy,
   ChevronRight,
   Activity,
-  CheckCircle2,
-  XCircle,
 } from "lucide-react"
+import type { PublicCookieStatus } from "@/lib/service-status"
+import { getServiceStatusForAbout } from "./-service-status.functions"
 
-interface CookieStatus {
-  latest: {
-    success: boolean
-    message: string
-    checkedAt: string
-  } | null
-  successRate: number
-  logs: { success: boolean; checkedAt: string }[]
-}
+export const Route = createFileRoute("/about/")({
+  head: () => ({
+    meta: [
+      { title: "关于 | 拾盐记" },
+      { name: "description", content: "了解拾盐记的服务状态、使用方式和免责声明" },
+    ],
+  }),
+  loader: () => getServiceStatusForAbout(),
+  component: AboutPage,
+})
 
-export default function AboutPage() {
-  const [cookieStatus, setCookieStatus] = useState<CookieStatus | null>(null)
-
-  useEffect(() => {
-    fetch("/api/admin/cookie-status")
-      .then((res) => res.json())
-      .then((data) => setCookieStatus(data))
-      .catch(() => {})
-  }, [])
+function AboutPage() {
+  const cookieStatus = Route.useLoaderData()
 
   return (
     <main className="container mx-auto max-w-4xl p-6">
@@ -49,65 +40,7 @@ export default function AboutPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {cookieStatus ? (
-              <div className="space-y-4">
-                {/* 当前状态 */}
-                <div className="flex items-center gap-3">
-                  {cookieStatus.latest?.success ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                  <div>
-                    <p className="font-medium">
-                      采集服务
-                      <span
-                        className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                          cookieStatus.latest?.success
-                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                            : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                        }`}
-                      >
-                        {cookieStatus.latest?.success ? "正常" : "异常"}
-                      </span>
-                    </p>
-                    {cookieStatus.latest && (
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                        最近检查：
-                        {new Date(cookieStatus.latest.checkedAt).toLocaleString("zh-CN")}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* 24 小时状态时间线 */}
-                {cookieStatus.logs.length > 0 && (
-                  <div>
-                    <p className="text-sm text-[hsl(var(--muted-foreground))] mb-2">
-                      最近 24 小时状态 · 成功率 {cookieStatus.successRate}%
-                    </p>
-                    <div className="flex gap-1 flex-wrap">
-                      {cookieStatus.logs
-                        .slice()
-                        .reverse()
-                        .map((log, i) => (
-                          <div
-                            key={i}
-                            className={`w-3 h-8 rounded-sm ${
-                              log.success ? "bg-green-500" : "bg-red-500"
-                            }`}
-                            title={`${new Date(log.checkedAt).toLocaleString("zh-CN")} - ${
-                              log.success ? "正常" : "异常"
-                            }`}
-                          />
-                        ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-[hsl(var(--muted-foreground))]">加载中...</p>
-            )}
+            <ServiceStatusSummary status={cookieStatus} />
           </CardContent>
         </Card>
 
@@ -205,7 +138,7 @@ export default function AboutPage() {
                   </ol>
                   {/* 微信截图 */}
                   <div className="mt-3 flex justify-center">
-                    <Image
+                    <img
                       src="/images/wechat.png"
                       alt="微信浏览器复制链接示意图"
                       width={280}
@@ -244,7 +177,7 @@ export default function AboutPage() {
           <CardContent>
             <div className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
               <p>拾盐记 v1.0</p>
-              <p>基于 Next.js 15 + Prisma + PostgreSQL 构建</p>
+              <p>基于 TanStack Start + Prisma + PostgreSQL 构建</p>
             </div>
           </CardContent>
         </Card>
@@ -272,5 +205,71 @@ export default function AboutPage() {
         </Card>
       </div>
     </main>
+  )
+}
+
+function ServiceStatusSummary({ status }: { status: PublicCookieStatus }) {
+  const latest = status.latest
+  const checkedAt = latest
+    ? new Date(latest.checkedAt).toLocaleString("zh-CN", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "暂无检查记录"
+
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="flex flex-wrap items-center gap-3">
+        {latest && (
+          <span
+            className={`rounded px-2 py-0.5 text-xs ${
+              latest.success
+                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+            }`}
+          >
+            {latest.success ? "正常" : "异常"}
+          </span>
+        )}
+        <span className="text-[hsl(var(--muted-foreground))]">
+          最近检查：{checkedAt}
+        </span>
+        {latest?.message && (
+          <span className="text-[hsl(var(--muted-foreground))]">
+            {latest.message}
+          </span>
+        )}
+      </div>
+
+      {status.logs.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">
+            最近 24 小时状态
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {status.logs
+              .slice()
+              .reverse()
+              .map((log, index) => (
+                <div
+                  key={`${log.checkedAt}-${index}`}
+                  className={`h-8 w-3 rounded-sm ${
+                    log.success ? "bg-green-500" : "bg-red-500"
+                  }`}
+                  title={`${new Date(log.checkedAt).toLocaleString("zh-CN")} - ${
+                    log.success ? "正常" : "异常"
+                  }`}
+                />
+              ))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-[hsl(var(--muted-foreground))]">
+          暂无检查记录。
+        </p>
+      )}
+    </div>
   )
 }

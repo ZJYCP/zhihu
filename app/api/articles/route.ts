@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/api-error";
+import { handleApiError, jsonResponse } from "@/lib/api-response";
 
 // GET /api/articles - 获取已完成的文章列表
-export async function GET(request: NextRequest) {
+async function getArticles(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       article.content_preview = article.content_preview?.substring(0, 120) || "";
     });
 
-    return NextResponse.json({
+    return jsonResponse({
       articles,
       total,
       page,
@@ -63,3 +63,11 @@ export async function GET(request: NextRequest) {
     return handleApiError(error, "获取文章列表失败");
   }
 }
+
+export const Route = createFileRoute("/api/articles")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => getArticles(request),
+    },
+  },
+});

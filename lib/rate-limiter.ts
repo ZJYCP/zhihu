@@ -1,22 +1,26 @@
 import { prisma } from "@/lib/prisma";
-
-const WINDOW_MS = 60 * 60 * 1000; // 1 小时
-const MAX_REQUESTS = 10;
+import { coerceConfigValue, getRuntimeConfig } from "@/lib/config/runtime-config";
 
 export async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
-  const windowStart = new Date(Date.now() - WINDOW_MS);
+  const config = await getRuntimeConfig();
+  const windowMs = coerceConfigValue("rate_limit_window_ms", config.rate_limit_window_ms);
+  const maxRequests = coerceConfigValue(
+    "rate_limit_max_requests",
+    config.rate_limit_max_requests
+  );
+  const windowStart = new Date(Date.now() - windowMs);
 
   // 统计时间窗口内的请求数
   const count = await prisma.rateLimitLog.count({
     where: { ip, createdAt: { gte: windowStart } },
   });
 
-  if (count >= MAX_REQUESTS) {
+  if (count >= maxRequests) {
     return { allowed: false, remaining: 0 };
   }
 
   // 记录本次请求
   await prisma.rateLimitLog.create({ data: { ip } });
 
-  return { allowed: true, remaining: MAX_REQUESTS - count - 1 };
+  return { allowed: true, remaining: maxRequests - count - 1 };
 }
