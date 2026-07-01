@@ -254,7 +254,7 @@ function AboutPage() {
           <CardContent>
             <div className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
               <p>拾盐记 v1.0</p>
-              <p>基于 Next.js 15 + Prisma + PostgreSQL 构建</p>
+              <p>基于 TanStack Start + Prisma + PostgreSQL 构建</p>
             </div>
           </CardContent>
         </Card>
