@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
+import { createFileRoute } from "@tanstack/react-router";
+import { prisma } from "@/lib/server/prisma";
+import { withAdmin } from "@/lib/server/admin-auth";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
 
 // GET /api/admin/articles - 获取文章列表（支持搜索和分页）
-export async function GET(request: NextRequest) {
+async function getAdminArticles(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
       prisma.crawlTask.count({ where }),
     ]);
 
-    return NextResponse.json({
+    return jsonResponse({
       articles,
       total,
       page,
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
 }
 
 // DELETE /api/admin/articles - 批量删除文章
-export async function DELETE(request: NextRequest) {
+async function deleteAdminArticles(request: Request) {
   try {
     const body = await safeParseJson<{ ids?: string[] }>(request);
 
@@ -75,8 +76,17 @@ export async function DELETE(request: NextRequest) {
       where: { id: { in: ids } },
     });
 
-    return NextResponse.json({ success: true, deleted: result.count });
+    return jsonResponse({ success: true, deleted: result.count });
   } catch (error) {
     return handleApiError(error, "批量删除文章失败");
   }
 }
+
+export const Route = createFileRoute("/api/admin/articles")({
+  server: {
+    handlers: {
+      GET: withAdmin(({ request }) => getAdminArticles(request)),
+      DELETE: withAdmin(({ request }) => deleteAdminArticles(request)),
+    },
+  },
+});

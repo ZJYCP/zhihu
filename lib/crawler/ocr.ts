@@ -1,3 +1,5 @@
+import { getRuntimeConfigValue } from "@/lib/server/runtime-config";
+
 export interface OcrResult {
   content: string;
 }
@@ -8,13 +10,12 @@ export async function ocrImage(
   imageDataUrl: string,
   options: { prompt?: string; apiKey?: string } = {}
 ): Promise<OcrResult> {
-  const {
-    prompt = DEFAULT_PROMPT,
-    apiKey = process.env.SILICONFLOW_API_KEY,
-  } = options;
+  const prompt = options.prompt ?? DEFAULT_PROMPT;
+  const apiKey =
+    options.apiKey ?? (await getRuntimeConfigValue("siliconflow_api_key"));
 
   if (!apiKey) {
-    throw new Error("未提供 SILICONFLOW_API_KEY");
+    throw new Error("未配置 SiliconFlow API Key");
   }
 
   const response = await fetch(

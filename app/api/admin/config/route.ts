@@ -1,35 +1,41 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
+import { createFileRoute } from "@tanstack/react-router";
+import { prisma } from "@/lib/server/prisma";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
+import { withAdmin } from "@/lib/server/admin-auth";
+import {
+  isRuntimeConfigKey,
+  listRuntimeConfig,
+  serializeConfig,
+  validateConfigValue,
+} from "@/lib/server/runtime-config";
 
 // GET /api/admin/config - 获取配置
-export async function GET(request: NextRequest) {
+async function getAdminConfig(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const key = searchParams.get("key");
 
     if (key) {
+      if (!isRuntimeConfigKey(key)) {
+        return errorResponse("未知配置项", 404, "CONFIG_NOT_FOUND");
+      }
+
       const config = await prisma.systemConfig.findUnique({
         where: { key },
       });
-      return NextResponse.json(config);
+      return jsonResponse(
+        serializeConfig(key, config?.value ?? "", { revealValue: true })
+      );
     }
 
-    // 返回所有配置（隐藏敏感值）
-    const configs = await prisma.systemConfig.findMany();
-    return NextResponse.json(
-      configs.map((c) => ({
-        ...c,
-        value: c.key === "zhihu_cookie" ? maskCookie(c.value) : c.value,
-      }))
-    );
+    return jsonResponse(await listRuntimeConfig());
   } catch (error) {
     return handleApiError(error, "获取配置失败");
   }
 }
 
 // POST /api/admin/config - 更新配置
-export async function POST(request: NextRequest) {
+async function updateAdminConfig(request: Request) {
   try {
     const body = await safeParseJson<{ key?: string; value?: string }>(request);
 
@@ -43,23 +49,32 @@ export async function POST(request: NextRequest) {
       return errorResponse("key 和 value 不能为空", 400);
     }
 
+    if (!isRuntimeConfigKey(key)) {
+      return errorResponse("未知配置项", 400, "CONFIG_NOT_ALLOWED");
+    }
+
+    const validationError = validateConfigValue(key, value);
+    if (validationError) {
+      return errorResponse(validationError, 400, "INVALID_CONFIG_VALUE");
+    }
+
     const config = await prisma.systemConfig.upsert({
       where: { key },
       update: { value },
       create: { key, value },
     });
 
-    return NextResponse.json({
-      ...config,
-      value: key === "zhihu_cookie" ? maskCookie(config.value) : config.value,
-    });
+    return jsonResponse(serializeConfig(key, config.value));
   } catch (error) {
     return handleApiError(error, "更新配置失败");
   }
 }
 
-// 隐藏 Cookie 中间部分
-function maskCookie(cookie: string): string {
-  if (cookie.length <= 20) return "***";
-  return cookie.slice(0, 10) + "..." + cookie.slice(-10);
-}
+export const Route = createFileRoute("/api/admin/config")({
+  server: {
+    handlers: {
+      GET: withAdmin(({ request }) => getAdminConfig(request)),
+      POST: withAdmin(({ request }) => updateAdminConfig(request)),
+    },
+  },
+});

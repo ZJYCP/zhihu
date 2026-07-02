@@ -1,0 +1,16 @@
+.git
+.worktrees
+.next
+.output
+.tanstack
+node_modules
+npm-debug.log*
+.env
+.env.*
+dist
+output
+zhihu-user-data
+resource
+asset
+temp_grid.png
+tsconfig.tsbuildinfo

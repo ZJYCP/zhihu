@@ -1,7 +1,10 @@
-"use client";
-
 import { useState, useEffect, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,36 +19,20 @@ import {
   AlertCircle,
   Download,
 } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import { toast } from "sonner";
-import { apiGet, apiPost, apiDelete } from "@/lib/api-client";
-
-interface Article {
-  id: string;
-  title: string | null;
-  author: string | null;
-  content_preview: string | null;
-  url: string;
-  createdAt: string;
-}
+import { apiGet, apiPost, apiDelete } from "@/lib/client/api-client";
+import type {
+  ArticleListItem as Article,
+  ArticlesListResponse as ArticlesResponse,
+  Stats,
+} from "@/lib/shared/types";
 
 interface Task {
   id: string;
   url: string;
   status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
   error: string | null;
-}
-
-interface Stats {
-  totalArticles: number;
-  weekArticles: number;
-}
-
-interface ArticlesResponse {
-  articles: Article[];
-  total: number;
-  totalPages: number;
 }
 
 interface TaskResponse {
@@ -60,6 +47,14 @@ interface CrawlResponse {
   status: string;
   error?: string;
 }
+
+export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    page: Number(search.page) || 1,
+    q: typeof search.q === "string" ? search.q : "",
+  }),
+  component: Home,
+});
 
 // 判断输入类型
 type InputType = "keyword" | "valid_url" | "invalid_url";
@@ -118,7 +113,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export default function Home() {
+function Home() {
   return (
     <Suspense fallback={
       <main className="container mx-auto max-w-6xl px-4 py-6">
@@ -133,12 +128,12 @@ export default function Home() {
 }
 
 function HomeContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const search = useSearch({ from: "/" });
 
   // 从 URL 参数初始化状态
-  const initialPage = Number(searchParams.get("page")) || 1;
-  const initialSearch = searchParams.get("q") || "";
+  const initialPage = search.page;
+  const initialSearch = search.q;
 
   const [input, setInput] = useState("");
   const [articles, setArticles] = useState<Article[]>([]);
@@ -158,18 +153,21 @@ function HomeContent() {
 
   // 更新 URL 参数（不刷新页面）
   const updateUrl = useCallback((newPage: number, newSearch: string) => {
-    const params = new URLSearchParams();
-    if (newPage > 1) params.set("page", String(newPage));
-    if (newSearch) params.set("q", newSearch);
-    const queryString = params.toString();
-    router.replace(queryString ? `/?${queryString}` : "/", { scroll: false });
-  }, [router]);
+    navigate({
+      to: "/",
+      search: {
+        page: newPage > 1 ? newPage : undefined,
+        q: newSearch || undefined,
+      },
+      replace: true,
+    });
+  }, [navigate]);
 
   // 获取统计数据
   const fetchStats = useCallback(async () => {
     const result = await apiGet<Stats>("/api/stats", false);
     if (result.success) {
-      setStats({ totalArticles: result.data.totalArticles, weekArticles: result.data.weekArticles });
+      setStats(result.data);
     }
   }, []);
 
@@ -350,7 +348,7 @@ function HomeContent() {
           <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />
           <span>
             暂不支持此 URL 格式，支持付费专栏和问答链接。
-            <Link href="/about" className="text-blue-500 hover:underline ml-1">
+            <Link to="/about" className="text-blue-500 hover:underline ml-1">
               如何获取链接？
             </Link>
           </span>
@@ -463,7 +461,7 @@ function HomeContent() {
   return (
     <main className="container mx-auto max-w-6xl px-4 py-6">
       {/* 添加 shimmer 动画样式 */}
-      <style jsx>{`
+      <style>{`
         @keyframes shimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
@@ -574,7 +572,7 @@ function HomeContent() {
         <div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {articles.map((article) => (
-              <Link key={article.id} href={`/tasks/${article.id}`}>
+              <Link key={article.id} to="/tasks/$id" params={{ id: article.id }}>
                 <Card className="h-full group cursor-pointer overflow-hidden border-transparent bg-[hsl(var(--muted))]/30 hover:bg-[hsl(var(--muted))]/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1">
                   <CardContent className="p-5 flex flex-col h-full">
                     <div className="h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 mb-4 group-hover:w-20 transition-all duration-300" />

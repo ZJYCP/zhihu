@@ -1,4 +1,7 @@
-import { prisma } from "@/lib/prisma";
+import {
+  coerceConfigValue,
+  getRuntimeConfig,
+} from "@/lib/server/runtime-config";
 
 export interface CrawlerConfig {
   cookie: string;
@@ -6,29 +9,13 @@ export interface CrawlerConfig {
   userAgent: string;
 }
 
-// 从数据库获取 Cookie，fallback 到环境变量
-async function getCookieFromDb(): Promise<string> {
-  try {
-    const config = await prisma.systemConfig.findUnique({
-      where: { key: "zhihu_cookie" },
-    });
-    if (config?.value) {
-      return config.value;
-    }
-  } catch {
-    // 数据库未初始化时忽略错误
-  }
-  return process.env.ZHIHU_COOKIE || "";
-}
-
 // 异步获取爬虫配置
 export async function getCrawlerConfig(): Promise<CrawlerConfig> {
-  const cookie = await getCookieFromDb();
+  const config = await getRuntimeConfig();
   return {
-    cookie,
-    requestDelay: parseInt(process.env.REQUEST_DELAY || "3000", 10),
-    userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    cookie: config.zhihu_cookie,
+    requestDelay: coerceConfigValue("request_delay_ms", config.request_delay_ms),
+    userAgent: config.crawler_user_agent,
   };
 }
 

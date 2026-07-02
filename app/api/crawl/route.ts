@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createFileRoute } from "@tanstack/react-router";
+import { prisma } from "@/lib/server/prisma";
 import { ZhihuCrawler, getCrawlerConfig, parseZhihuUrl } from "@/lib/crawler";
-import { handleApiError, safeParseJson, errorResponse } from "@/lib/api-error";
-import { checkRateLimit } from "@/lib/rate-limiter";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
+import { checkRateLimit } from "@/lib/server/rate-limiter";
 
 // POST /api/crawl - 执行爬取
-export async function POST(request: NextRequest) {
+async function crawlTask(request: Request) {
   // IP 限流检查
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ||
              request.headers.get("x-real-ip") ||
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return NextResponse.json(updated);
+      return jsonResponse(updated);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "未知错误";
@@ -103,3 +103,11 @@ export async function POST(request: NextRequest) {
     return handleApiError(error, "爬取任务执行失败");
   }
 }
+
+export const Route = createFileRoute("/api/crawl")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => crawlTask(request),
+    },
+  },
+});

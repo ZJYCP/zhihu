@@ -1,6 +1,8 @@
 node_modules/
 dist/
 output/
+.output/
+.worktrees/
 .env
 .env.local
 *.log
@@ -11,19 +13,14 @@ Thumbs.db
 docs/
 CLAUDE.md
 
-# Next.js
-.next/
-out/
-
 # Prisma
 prisma/*.db
 
 # Misc
 temp_grid.png
 chi_sim.traineddata
+tsconfig.tsbuildinfo
 
 build
 
 resource
-zhihu-user-data/
-asset/
