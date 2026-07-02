@@ -1,22 +1,42 @@
 # 拾盐记
 
-知乎内容采集与管理系统，支持付费专栏和问答内容的采集、存储和阅读。
+知乎付费专栏与问答内容的采集、存储和阅读系统。
+
+自动绕过知乎的自定义字体反爬机制，把付费内容抓取下来本地化存储，支持全文搜索、Markdown 导出和响应式阅读界面（含深色模式）。
+
+> **⚠️ 先说清楚：本工具不是「免登录白嫖神器」。**
+>
+> 它不会替你登录，也不会变出会员账号。你需要自己准备一个**已开通付费会员的知乎账号 Cookie** 填进系统设置——就像你得先有冰箱，才能把菜放进去。本工具做的是「把你自己有权访问的内容搬到自家硬盘上」，仅此而已。没有会员 Cookie，它只能干瞪眼。
+
+> **🎁 想先体验效果？**
+>
+> 作者维护了一个公开实例：[zhihu.artimind.top](https://zhihu.artimind.top)。**仅供体验，请勿滥用**——想长期使用或对隐私敏感，建议按下方说明自己部署一个。
+
 
 ## 功能特性
 
-- 支持知乎付费专栏和问答链接的内容采集
-- 自动处理知乎字体反爬机制（OCR 字形识别）
-- 内容本地化存储，支持全文搜索
+- 支持知乎**付费专栏**和**问答**链接的内容采集
+- 自动处理知乎字体反爬（解析 WOFF2 字体 → 渲染字形 → OCR 识别真实字符）
+- 内容本地化存储，支持按关键词或 URL 精确搜索
 - 响应式 Web 界面，支持深色模式
-- 支持批量导出为 Markdown 格式
+- 文章批量导出为 Markdown
+- 管理后台：文章管理、用户反馈、运行时配置（Cookie / API Key 等在线修改，免重启）
+- 知乎 Cookie 可用性定时检查与 24h 状态时间线
 
 ## 技术栈
 
-- **框架**: TanStack Start + React 19
+- **框架**: TanStack Start (Vite + Nitro) + React 19
 - **样式**: Tailwind CSS 4
 - **数据库**: PostgreSQL + Prisma ORM
-- **爬虫**: cheerio (HTML 解析) + opentype.js (字体解析) + sharp (图像处理)
-- **OCR**: SiliconFlow API (DeepSeek-OCR)
+- **爬虫**: cheerio（HTML 解析）+ opentype.js（字体解析）+ sharp（图像处理）
+- **OCR**: SiliconFlow API（DeepSeek-OCR）
+
+## 前置要求
+
+- **Node.js** ≥ 22.12.0（本地开发）
+- **PostgreSQL** 数据库（本地或远程，用于存储采集内容和配置）
+- **SiliconFlow API Key**（用于 OCR 识别，在 [siliconflow.cn](https://siliconflow.cn) 注册）
+- 一个有效的**知乎登录 Cookie**（用于访问付费内容）
 
 ## 快速开始
 
@@ -37,7 +57,7 @@ APP_SECRET="replace_with_a_long_random_secret"
 PORT=3000
 ```
 
-知乎 Cookie、SiliconFlow API Key、User-Agent、请求间隔、限流参数和 Cookie 检查 URL 均在「管理后台 -> 系统设置」中配置，保存后下一次请求立即生效，无需重启服务。
+> 知乎 Cookie、SiliconFlow API Key、User-Agent、请求间隔、限流参数和 Cookie 检查 URL 不在 `.env` 里，而是在「管理后台 → 系统设置」中在线配置，保存后下一次请求立即生效，无需重启服务。
 
 ### 3. 初始化数据库
 
@@ -51,13 +71,13 @@ npm run db:migrate:dev
 npm run dev
 ```
 
-访问 http://localhost:3000 即可使用。
+访问 http://localhost:3000 即可使用。首次使用请先到 `/admin` 用 `ADMIN_PASSWORD` 登录，在「系统设置」里填入知乎 Cookie 和 SiliconFlow API Key。
 
-## Docker Compose 部署
+## 部署
 
-本项目的 Compose 只启动 Web 服务，不包含 PostgreSQL。请先准备外部 PostgreSQL，并把连接串填入 `.env` 的 `DATABASE_URL`。生产容器启动时会先执行 `prisma migrate deploy`，自动应用仓库中尚未执行的数据库迁移；迁移失败时服务不会继续启动。
+项目以 Docker 部署为主，提供 `Dockerfile` 和 `docker-compose.yml`。Compose 只启动 Web 服务，不包含 PostgreSQL——请先准备一个外部 PostgreSQL，把连接串填入 `.env` 的 `DATABASE_URL`。
 
-如果 PostgreSQL 跑在宿主机上，`DATABASE_URL` 里的主机名需要使用容器可访问的地址；macOS/Windows Docker Desktop 通常可以用 `host.docker.internal`。
+如果 PostgreSQL 跑在宿主机上，`DATABASE_URL` 里的主机名需要用容器可访问的地址；macOS / Windows 的 Docker Desktop 通常可以用 `host.docker.internal`。
 
 ```bash
 cp .env.example .env
@@ -67,37 +87,18 @@ docker compose build
 docker compose up -d
 ```
 
-首次启动后访问 `/admin`，使用 `ADMIN_PASSWORD` 登录，然后在系统设置里填写知乎 Cookie、SiliconFlow API Key 等运行时配置。
 
-更新代码或 Prisma schema 后，先在开发环境生成并提交 Prisma migration，再重新执行 `docker compose build && docker compose up -d`。容器启动时会自动同步数据库结构。
+## 工作原理：字体反爬
 
-### 已有生产库的 Prisma Migrate 基线
+知乎付费内容使用自定义 WOFF2 字体对文字进行混淆——字形与字符的映射表是随机生成、每次请求都不同的，直接抓 HTML 拿到的是乱码。本项目的处理流程：
 
-如果生产数据库已经用过 `prisma db push` 或历史版本初始化过，但还没有 `_prisma_migrations` 记录，第一次执行 `prisma migrate deploy` 会报 `P3005: The database schema is not empty`。这是 Prisma 的保护机制，需要先把已有结构标记为基线。
+1. 用 cheerio 加载页面 HTML，提取内联的 `@font-face` base64 字体
+2. 用 opentype.js 解析字体文件，遍历每个字形
+3. 用 sharp 把字形路径渲染成 PNG 图像，拼成网格图
+4. 调用 SiliconFlow DeepSeek-OCR 识别网格图中的真实字符，建立「编码 → 字符」映射
+5. 用映射表把正文从混淆编码还原为可读文本
 
-只需要对同一个生产库执行一次：
-
-```bash
-DATABASE_URL="postgresql://..." npm run db:migrate:baseline
-```
-
-基线完成后，再执行部署命令。后续新增表和字段会由 `prisma migrate deploy` 自动应用。
-
-## Vercel 部署
-
-Vercel 不会执行 Dockerfile 的 `CMD`，因此 Build Command 需要显式运行数据库迁移：
-
-```bash
-npm run db:migrate:deploy && npm run build
-```
-
-如果连接的是已有生产库，第一次部署前先在本地或 Vercel CLI 环境执行一次基线命令：
-
-```bash
-DATABASE_URL="postgresql://..." npm run db:migrate:baseline
-```
-
-之后 Vercel 的 Build Command 保持 `npm run db:migrate:deploy && npm run build` 即可。不要在 Preview 环境连接同一个生产库执行迁移。
+这套流程在 `src/lib/crawler/` 下实现（`font-decoder.ts` 是核心）。
 
 ## 支持的链接格式
 
@@ -119,7 +120,7 @@ DATABASE_URL="postgresql://..." npm run db:migrate:baseline
 3. 在微信中打开分享的链接
 4. 点击微信浏览器右上角「...」，选择「复制链接」
 
-> 注意：知乎 App 分享功能中的「复制链接」得到的网址无法提取内容
+> 注意：知乎 App 分享功能中的「复制链接」得到的网址无法提取内容，请用上述方法获取完整链接。
 
 ### 电脑端
 
@@ -128,48 +129,46 @@ DATABASE_URL="postgresql://..." npm run db:migrate:baseline
 ## 常用命令
 
 ```bash
-npm run dev          # 启动开发服务器
-npm run build        # 构建生产版本
-npm run start        # 启动生产服务器（需先 npm run build）
-npm run start:prod   # 应用生产迁移并启动服务
-npm run db:migrate:dev     # 开发环境生成并应用 Prisma migration
-npm run db:migrate:deploy  # 生产环境应用已提交的 Prisma migration
-npm run db:push      # 原型期快速同步 Schema（不建议用于生产）
-npm run db:studio    # 打开 Prisma Studio
-npm run lint         # 代码检查
+npm run dev                 # 启动开发服务器
+npm run build               # 构建生产版本
+npm run start               # 启动生产服务器（需先 build）
+npm run start:prod          # 应用生产迁移并启动服务
+npm run db:migrate:dev      # 开发环境生成并应用 Prisma migration
+npm run db:migrate:deploy   # 生产环境应用已提交的 Prisma migration
+npm run db:migrate:baseline # 把已有生产库标记为基线（仅首次）
+npm run db:push             # 原型期快速同步 Schema（不建议用于生产）
+npm run db:studio           # 打开 Prisma Studio
+npm run lint                # 代码检查
 ```
 
 ## 项目结构
 
 ```
-├── app/                    # TanStack Start 文件路由
-│   ├── api/               # API 路由
-│   │   ├── articles/      # 文章列表接口
-│   │   ├── crawl/         # 爬取执行接口
-│   │   ├── stats/         # 统计数据接口
-│   │   └── tasks/         # 任务管理接口
-│   ├── about/             # 关于页面
-│   ├── stats/             # 统计页面
-│   └── tasks/$id/         # 文章详情页面
-├── components/            # React 组件
-├── lib/
-│   ├── crawler/           # 爬虫核心
-│   │   ├── crawler.ts     # 主爬虫类
-│   │   ├── font-decoder.ts# 字体解码器
-│   │   ├── ocr.ts         # OCR 服务
-│   │   └── config.ts      # 爬虫默认配置与运行时配置读取
-│   ├── config/            # 运行时配置中心
-│   └── prisma.ts          # Prisma 客户端
-├── prisma/
-│   └── schema.prisma      # 数据库模型
-└── public/                # 静态资源
+src/
+├── router.tsx              # 路由工厂
+├── routes/                 # TanStack Start 文件路由
+│   ├── __root.tsx          # 根布局
+│   ├── page.tsx            # 首页（内容库）
+│   ├── about/              # 关于页
+│   ├── admin/              # 管理后台（文章 / 反馈 / 设置）
+│   ├── stats/              # 统计页
+│   ├── tasks/$id/          # 文章详情页
+│   └── api/                # API 路由（crawl / tasks / articles / stats / admin / cron）
+├── components/             # React 组件（Navbar / ThemeProvider / UI 基础组件）
+└── lib/
+    ├── crawler/            # 爬虫核心（crawler / font-decoder / ocr / config）
+    ├── server/             # 服务端库（prisma / admin-auth / api-response / rate-limiter 等）
+    ├── client/             # 客户端库（api-client）
+    └── shared/             # 共享类型与工具
 ```
+
+环境变量见 [`.env.example`](.env.example)；数据库模型见 [`prisma/schema.prisma`](prisma/schema.prisma)。
 
 ## 免责声明
 
 - 本工具仅供个人学习和研究使用，请勿用于任何商业用途
 - 用户在使用本工具时应遵守相关法律法规，尊重原创作者的知识产权
-- 所采集的内容版权归原作者所有
+- 所采集内容版权归原作者所有
 - 本工具不对用户的任何行为承担责任，因使用本工具产生的任何法律纠纷由用户自行承担
 - 如有侵权，请联系删除
 

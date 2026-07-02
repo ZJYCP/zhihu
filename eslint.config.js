@@ -9,7 +9,7 @@ export default tseslint.config(
       "node_modules/**",
       ".worktrees/**",
       ".vercel/**",
-      "routeTree.gen.ts",
+      "src/routeTree.gen.ts",
     ],
   },
   js.configs.recommended,

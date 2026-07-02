@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
 
-const apiDir = new URL("../app/api", import.meta.url);
+const apiDir = new URL("../src/routes/api", import.meta.url);
 
 // 管理员鉴权守卫：直接调用 requireAdminRequest 或经 withAdmin 高阶包装均视为受保护
 const ADMIN_GUARDS = ["requireAdminRequest", "withAdmin"];

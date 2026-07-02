@@ -13,9 +13,9 @@ export default defineConfig({
     tsconfigPaths(),
     tailwindcss(),
     tanstackStart({
-      srcDirectory: ".",
+      // srcDirectory 默认 "src"；routesDirectory 默认 "routes"（解析在 src 下）
+      // routeTree.gen.ts 生成在 src/ 下
       router: {
-        routesDirectory: "app",
         indexToken: "page",
       },
     }),

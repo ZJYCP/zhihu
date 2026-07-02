@@ -1,19 +1,19 @@
 import assert from "node:assert/strict";
 import { Prisma } from "@prisma/client";
-import { handleAdminAuthPost } from "../app/api/admin/auth/route";
+import { handleAdminAuthPost } from "../src/routes/api/admin/auth/route";
 import {
   createAdminToken,
   getBearerToken,
   requireAdminRequest,
   verifyAdminToken,
   verifyAdminRequest,
-} from "../lib/server/admin-auth";
+} from "../src/lib/server/admin-auth";
 import {
   errorResponse,
   handleApiError,
   safeParseJson,
   successResponse,
-} from "../lib/server/api-response";
+} from "../src/lib/server/api-response";
 
 const secret = "test-secret-with-enough-entropy";
 const token = createAdminToken(secret, 1_700_000_000);

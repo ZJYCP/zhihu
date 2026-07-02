@@ -14,9 +14,9 @@
     "jsx": "preserve",
     "incremental": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "routeTree.gen.ts"],
-  "exclude": ["node_modules", ".output", "dist", ".next", ".worktrees"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts", "scripts/**/*.tsx", "*.config.ts", "*.config.js"],
+  "exclude": ["node_modules", ".output", "dist", ".next", ".worktrees", ".tanstack"]
 }

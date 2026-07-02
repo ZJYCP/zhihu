@@ -10,6 +10,7 @@ output/
 Thumbs.db
 .bmad-core
 .claude/commands/BMad
+.tanstack
 docs/
 CLAUDE.md
 
@@ -20,6 +21,7 @@ prisma/*.db
 temp_grid.png
 chi_sim.traineddata
 tsconfig.tsbuildinfo
+src/routeTree.gen.ts
 
 build
 

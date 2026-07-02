@@ -39,7 +39,7 @@ npm run lint             # ESLint 检查
 
 ## Architecture
 
-### 页面路由 (`app/`)
+### 页面路由 (`src/routes/`)
 文件路由，`page.tsx` 为目录的 index 路由，`-` 前缀文件为路由私有模块（不生成路由）。
 - `__root.tsx` - 根布局（Navbar / ThemeProvider / Toaster）
 - `page.tsx` - 首页（内容库）
@@ -48,7 +48,7 @@ npm run lint             # ESLint 检查
 - `stats/` - 统计页
 - `tasks/$id/` - 文章详情页
 
-### API 路由 (`app/api/`)
+### API 路由 (`src/routes/api/`)
 TanStack Start API 路由，用 `createFileRoute(...)({ server: { handlers: { METHOD } } })` 定义，返回 `Response`。
 - `articles/` - 已完成文章列表（搜索分页）
 - `crawl/` - 执行爬取任务
@@ -60,14 +60,14 @@ TanStack Start API 路由，用 `createFileRoute(...)({ server: { handlers: { ME
   - `auth/` `config/` `articles/` `articles/$id/` `feedback/` `feedback/$id/` `check-cookie/` `cookie-status/`
 - `cron/check-cookie/` - 定时 Cookie 健康检查
 
-### Crawler Core (`/lib/crawler/`)
+### Crawler Core (`src/lib/crawler/`)
 - `crawler.ts` - 主爬虫类 `ZhihuCrawler`，调度问答/付费专栏爬取
 - `font-decoder.ts` - 知乎字体反爬：opentype.js 解析字体 → sharp 渲染字形网格图 → OCR 识别
 - `ocr.ts` - SiliconFlow OCR API 集成
 - `config.ts` - 爬虫配置（从 DB 运行时配置读取 cookie/userAgent 等）
 - `index.ts` - 桶文件
 
-### Server Lib (`/lib/`)
+### Server Lib (`src/lib/server/`)
 - `prisma.ts` - Prisma 客户端单例
 - `admin-auth.ts` - HMAC token 鉴权（APP_SECRET 签名，24h TTL）
 - `api-response.ts` - 服务端 Response 构造与错误映射
@@ -76,7 +76,7 @@ TanStack Start API 路由，用 `createFileRoute(...)({ server: { handlers: { ME
 - `service-status.ts` - 公开服务状态
 - `config/runtime-config.ts` - DB `SystemConfig` 运行时配置读写
 
-### Client Lib
+### Client Lib (`src/lib/client/`)
 - `api-client.ts` - 浏览器 fetch 封装（自动注入 admin token，错误 toast）
 
 ### Database Schema
@@ -97,6 +97,6 @@ TanStack Start API 路由，用 `createFileRoute(...)({ server: { handlers: { ME
 
 1. **字体反爬处理流程**：知乎使用自定义字体混淆文字，本项目通过 opentype.js 解析字体文件，用 sharp 将字形渲染为图像，再通过 OCR 识别真实字符。
 
-2. **配置体系**：启动密钥（数据库/管理密码/签名密钥）走 `.env`；爬虫所需的 Cookie、API Key、User-Agent 等可变配置走 DB `SystemConfig` 运行时配置，无需手动改文件。`lib/crawler/config.ts` 的 `getCrawlerConfig()` 从 DB 读取。
+2. **配置体系**：启动密钥（数据库/管理密码/签名密钥）走 `.env`；爬虫所需的 Cookie、API Key、User-Agent 等可变配置走 DB `SystemConfig` 运行时配置，无需手动改文件。`src/lib/crawler/config.ts` 的 `getCrawlerConfig()` 从 DB 读取。
 
 3. **Admin 鉴权**：`/api/admin/auth` 校验 `ADMIN_PASSWORD` 后签发 HMAC token（`APP_SECRET`），客户端存 `localStorage`，`api-client` 对 `/api/admin/*` 请求自动带 `Authorization: Bearer`。
