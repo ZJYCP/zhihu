@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { errorResponse } from "./api-response";
-import { getAppSecret } from "./env";
+import { getAppSecret, getExternalApiSecret } from "./env";
 
 const TOKEN_TTL_SECONDS = 60 * 60 * 24;
 
@@ -125,6 +125,37 @@ export function withAdmin<TParams extends Record<string, string>>(
 ): (ctx: { request: Request; params: TParams }) => Promise<Response> {
   return async (ctx) => {
     const authError = requireAdminRequest(ctx.request);
+    if (authError) return authError;
+    return handler(ctx);
+  };
+}
+
+/**
+ * 外部系统通道鉴权：用独立静态 secret（EXTERNAL_API_SECRET）校验，
+ * 不走 admin token 登录流程，适合机器对机器的低频调用。
+ * secret 未配置时返回 503（该通道视为关闭），不让进程崩溃。
+ */
+export function requireExternalSecret(request: Request) {
+  const secret = getExternalApiSecret();
+  if (!secret) {
+    return errorResponse("外部接口未启用", 503, "EXTERNAL_API_DISABLED");
+  }
+
+  if (!safeEqual(getBearerToken(request) ?? "", secret)) {
+    return errorResponse("未授权", 401, "UNAUTHORIZED");
+  }
+
+  return null;
+}
+
+/**
+ * 高阶函数：为外部系统 API handler 统一做 secret 鉴权，形态与 withAdmin 对称。
+ */
+export function withExternalSecret<TParams extends Record<string, string>>(
+  handler: (ctx: { request: Request; params: TParams }) => Promise<Response>,
+): (ctx: { request: Request; params: TParams }) => Promise<Response> {
+  return async (ctx) => {
+    const authError = requireExternalSecret(ctx.request);
     if (authError) return authError;
     return handler(ctx);
   };

@@ -27,3 +27,11 @@ export function getAdminPassword(): string {
 export function getPort(): number {
   return Number(process.env.PORT || 3000);
 }
+
+/**
+ * EXTERNAL_API_SECRET：外部系统直接更新 Cookie 等配置的鉴权密钥。
+ * 可选——未配置时 external 通道关闭（路由返回 503），不影响进程启动。
+ */
+export function getExternalApiSecret(): string | undefined {
+  return process.env.EXTERNAL_API_SECRET;
+}
