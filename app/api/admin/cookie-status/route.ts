@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { handleApiError, jsonResponse } from "@/lib/api-response";
-import { getPublicCookieStatus } from "@/lib/service-status";
+import { handleApiError, jsonResponse } from "@/lib/server/api-response";
+import { getPublicCookieStatus } from "@/lib/server/service-status";
 
 // GET /api/admin/cookie-status - 获取公开的 Cookie 检查状态
 async function getCookieStatus() {

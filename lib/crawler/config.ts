@@ -1,7 +1,7 @@
 import {
   coerceConfigValue,
   getRuntimeConfig,
-} from "@/lib/config/runtime-config";
+} from "@/lib/server/runtime-config";
 
 export interface CrawlerConfig {
   cookie: string;

@@ -4,10 +4,11 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     ignores: [
-      ".next/**",
       ".output/**",
       "dist/**",
       "node_modules/**",
+      ".worktrees/**",
+      ".vercel/**",
       "routeTree.gen.ts",
     ],
   },

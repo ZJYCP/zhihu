@@ -18,5 +18,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "routeTree.gen.ts"],
-  "exclude": ["node_modules", ".output", "dist"]
+  "exclude": ["node_modules", ".output", "dist", ".next", ".worktrees"]
 }

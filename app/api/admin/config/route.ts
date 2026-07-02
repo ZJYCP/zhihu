@@ -1,20 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
-import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
-import { requireAdminRequest } from "@/lib/admin-auth";
+import { prisma } from "@/lib/server/prisma";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
+import { withAdmin } from "@/lib/server/admin-auth";
 import {
   isRuntimeConfigKey,
   listRuntimeConfig,
   serializeConfig,
   validateConfigValue,
-} from "@/lib/config/runtime-config";
+} from "@/lib/server/runtime-config";
 
 // GET /api/admin/config - 获取配置
 async function getAdminConfig(request: Request) {
   try {
-    const authError = requireAdminRequest(request);
-    if (authError) return authError;
-
     const { searchParams } = new URL(request.url);
     const key = searchParams.get("key");
 
@@ -40,9 +37,6 @@ async function getAdminConfig(request: Request) {
 // POST /api/admin/config - 更新配置
 async function updateAdminConfig(request: Request) {
   try {
-    const authError = requireAdminRequest(request);
-    if (authError) return authError;
-
     const body = await safeParseJson<{ key?: string; value?: string }>(request);
 
     if (!body) {
@@ -79,8 +73,8 @@ async function updateAdminConfig(request: Request) {
 export const Route = createFileRoute("/api/admin/config")({
   server: {
     handlers: {
-      GET: async ({ request }) => getAdminConfig(request),
-      POST: async ({ request }) => updateAdminConfig(request),
+      GET: withAdmin(({ request }) => getAdminConfig(request)),
+      POST: withAdmin(({ request }) => updateAdminConfig(request)),
     },
   },
 });

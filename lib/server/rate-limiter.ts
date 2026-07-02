@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { coerceConfigValue, getRuntimeConfig } from "@/lib/config/runtime-config";
+import { prisma } from "@/lib/server/prisma";
+import { coerceConfigValue, getRuntimeConfig } from "@/lib/server/runtime-config";
 
 export async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
   const config = await getRuntimeConfig();

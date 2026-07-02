@@ -1,7 +1,7 @@
 import { FeedbackType } from "@prisma/client";
 import { createFileRoute } from "@tanstack/react-router";
-import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
-import { prisma } from "@/lib/prisma";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
+import { prisma } from "@/lib/server/prisma";
 
 const FEEDBACK_TYPES = Object.values(FeedbackType);
 

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { cleanZhihuUrl } from "@/lib/crawler";
-import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
 
 // GET /api/tasks - 获取任务列表
 async function getTasks(request: Request) {

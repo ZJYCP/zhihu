@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
-import { handleApiError, jsonResponse } from "@/lib/api-response";
+import { prisma } from "@/lib/server/prisma";
+import { handleApiError, jsonResponse } from "@/lib/server/api-response";
 
 const STATS_CACHE_TTL_MS = 60_000;
 let statsCache:

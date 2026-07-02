@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 
 export const RUNTIME_CONFIG_KEYS = [
   "zhihu_cookie",

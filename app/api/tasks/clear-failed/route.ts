@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
-import { handleApiError, jsonResponse } from "@/lib/api-response";
+import { prisma } from "@/lib/server/prisma";
+import { handleApiError, jsonResponse } from "@/lib/server/api-response";
 
 // DELETE /api/tasks/clear-failed - 清理所有失败任务
 async function clearFailedTasks() {

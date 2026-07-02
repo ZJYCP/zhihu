@@ -1,21 +1,10 @@
-import { prisma } from "@/lib/prisma";
-import { getRuntimeConfigValue } from "@/lib/config/runtime-config";
+import { prisma } from "@/lib/server/prisma";
+import { getRuntimeConfigValue } from "@/lib/server/runtime-config";
+import type { CookieStatus } from "@/lib/shared/types";
 
-export interface PublicCookieStatus {
-  configured: boolean;
-  latest: {
-    success: boolean;
-    message: string | null;
-    checkedAt: string;
-  } | null;
-  successRate: number;
-  logs: {
-    success: boolean;
-    checkedAt: string;
-  }[];
-}
+export type PublicCookieStatus = CookieStatus;
 
-export async function getPublicCookieStatus(): Promise<PublicCookieStatus> {
+export async function getPublicCookieStatus(): Promise<CookieStatus> {
   const [cookie, logs] = await Promise.all([
     getRuntimeConfigValue("zhihu_cookie"),
     getRecentCookieCheckLogs(),

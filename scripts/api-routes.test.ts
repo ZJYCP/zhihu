@@ -3,6 +3,12 @@ import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 const apiDir = new URL("../app/api", import.meta.url);
+
+// 管理员鉴权守卫：直接调用 requireAdminRequest 或经 withAdmin 高阶包装均视为受保护
+const ADMIN_GUARDS = ["requireAdminRequest", "withAdmin"];
+function isAdminGuarded(source: string): boolean {
+  return ADMIN_GUARDS.some((guard) => source.includes(guard));
+}
 const expectedRoutes = new Map([
   ["admin/articles/$id/route.ts", "/api/admin/articles/$id"],
   ["admin/articles/route.ts", "/api/admin/articles"],
@@ -67,7 +73,7 @@ const cookieStatusSource = await readFile(
   "utf8"
 );
 assert.equal(
-  cookieStatusSource.includes("requireAdminRequest"),
+  isAdminGuarded(cookieStatusSource),
   false,
   "/api/admin/cookie-status must expose public, read-only service status",
 );
@@ -77,7 +83,7 @@ const checkCookieSource = await readFile(
   "utf8"
 );
 assert.ok(
-  checkCookieSource.includes("requireAdminRequest"),
+  isAdminGuarded(checkCookieSource),
   "/api/admin/check-cookie must stay admin-only because it triggers a live Cookie check",
 );
 
@@ -86,8 +92,8 @@ const configSource = await readFile(
   "utf8"
 );
 assert.ok(
-  configSource.includes("requireAdminRequest"),
-  "/api/admin/config must stay admin-only because it exposes runtime configuration",
+  isAdminGuarded(configSource),
+  "/api/admin/config must be admin-only because it exposes runtime configuration",
 );
 
 const publicFeedbackSource = await readFile(
@@ -95,7 +101,7 @@ const publicFeedbackSource = await readFile(
   "utf8"
 );
 assert.equal(
-  publicFeedbackSource.includes("requireAdminRequest"),
+  isAdminGuarded(publicFeedbackSource),
   false,
   "/api/tasks/$id/feedback must be a public feedback submission endpoint",
 );
@@ -110,7 +116,7 @@ const adminFeedbackSource = await readFile(
   "utf8"
 );
 assert.ok(
-  adminFeedbackSource.includes("requireAdminRequest"),
+  isAdminGuarded(adminFeedbackSource),
   "/api/admin/feedback must be admin-only because it lists user feedback",
 );
 
@@ -119,12 +125,12 @@ const adminFeedbackDetailSource = await readFile(
   "utf8"
 );
 assert.ok(
-  adminFeedbackDetailSource.includes("requireAdminRequest"),
+  isAdminGuarded(adminFeedbackDetailSource),
   "/api/admin/feedback/$id must be admin-only because it updates feedback status",
 );
 assert.match(
   adminFeedbackDetailSource,
-  /PUT:\s*async/,
+  /PUT:\s*(async|withAdmin)/,
   "/api/admin/feedback/$id must support PUT because the admin API client uses apiPut",
 );
 

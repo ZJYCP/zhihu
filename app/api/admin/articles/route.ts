@@ -1,14 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
-import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
-import { requireAdminRequest } from "@/lib/admin-auth";
+import { prisma } from "@/lib/server/prisma";
+import { withAdmin } from "@/lib/server/admin-auth";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
 
 // GET /api/admin/articles - 获取文章列表（支持搜索和分页）
 async function getAdminArticles(request: Request) {
   try {
-    const authError = requireAdminRequest(request);
-    if (authError) return authError;
-
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
@@ -63,9 +60,6 @@ async function getAdminArticles(request: Request) {
 // DELETE /api/admin/articles - 批量删除文章
 async function deleteAdminArticles(request: Request) {
   try {
-    const authError = requireAdminRequest(request);
-    if (authError) return authError;
-
     const body = await safeParseJson<{ ids?: string[] }>(request);
 
     if (!body) {
@@ -91,8 +85,8 @@ async function deleteAdminArticles(request: Request) {
 export const Route = createFileRoute("/api/admin/articles")({
   server: {
     handlers: {
-      GET: async ({ request }) => getAdminArticles(request),
-      DELETE: async ({ request }) => deleteAdminArticles(request),
+      GET: withAdmin(({ request }) => getAdminArticles(request)),
+      DELETE: withAdmin(({ request }) => deleteAdminArticles(request)),
     },
   },
 });

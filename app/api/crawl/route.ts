@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { ZhihuCrawler, getCrawlerConfig, parseZhihuUrl } from "@/lib/crawler";
-import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
-import { checkRateLimit } from "@/lib/rate-limiter";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
+import { checkRateLimit } from "@/lib/server/rate-limiter";
 
 // POST /api/crawl - 执行爬取
 async function crawlTask(request: Request) {

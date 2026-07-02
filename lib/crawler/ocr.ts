@@ -1,4 +1,4 @@
-import { getRuntimeConfigValue } from "@/lib/config/runtime-config";
+import { getRuntimeConfigValue } from "@/lib/server/runtime-config";
 
 export interface OcrResult {
   content: string;

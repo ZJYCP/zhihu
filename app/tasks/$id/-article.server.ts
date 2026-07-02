@@ -1,5 +1,5 @@
 import { notFound } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 
 export async function findCompletedArticleForDetail(id: string) {
   const article = await prisma.crawlTask.findUnique({

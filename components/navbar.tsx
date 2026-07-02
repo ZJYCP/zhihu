@@ -1,10 +1,8 @@
-"use client";
-
 import { Link, useLocation } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import { BookOpen, Sparkle, Sun, Moon, BarChart3 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 export function Navbar() {
   const pathname = useLocation().pathname;

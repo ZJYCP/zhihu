@@ -5,7 +5,15 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 
 const aboutPage = readFileSync("app/about/page.tsx", "utf8");
 const articleDetailPage = readFileSync("app/tasks/$id/page.tsx", "utf8");
-const adminPage = readFileSync("app/admin/page.tsx", "utf8");
+// 管理后台已拆分为 page.tsx + 多个 -*.tsx 私有子组件，契约需覆盖整个目录
+const adminPanelSource = [
+  "app/admin/page.tsx",
+  ...readdirSync("app/admin")
+    .filter((f) => f.startsWith("-") && f.endsWith(".tsx"))
+    .map((f) => `app/admin/${f}`),
+]
+  .map((f) => readFileSync(f, "utf8"))
+  .join("\n");
 const rootRoute = readFileSync("app/__root.tsx", "utf8");
 const router = readFileSync("router.tsx", "utf8");
 const prismaSchema = readFileSync("prisma/schema.prisma", "utf8");
@@ -116,12 +124,12 @@ assert.match(
   "article detail page should submit feedback to the public task feedback endpoint",
 );
 assert.match(
-  adminPage,
+  adminPanelSource,
   /反馈管理/,
   "admin panel should include a feedback management tab",
 );
 assert.match(
-  adminPage,
+  adminPanelSource,
   /\/api\/admin\/feedback/,
   "admin panel should read feedback from the protected admin feedback API",
 );

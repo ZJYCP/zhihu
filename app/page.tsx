@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useCallback, Suspense } from "react";
 import {
   createFileRoute,
@@ -21,35 +19,20 @@ import {
   AlertCircle,
   Download,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import { toast } from "sonner";
-import { apiGet, apiPost, apiDelete } from "@/lib/api-client";
-
-interface Article {
-  id: string;
-  title: string | null;
-  author: string | null;
-  content_preview: string | null;
-  url: string;
-  createdAt: string;
-}
+import { apiGet, apiPost, apiDelete } from "@/lib/client/api-client";
+import type {
+  ArticleListItem as Article,
+  ArticlesListResponse as ArticlesResponse,
+  Stats,
+} from "@/lib/shared/types";
 
 interface Task {
   id: string;
   url: string;
   status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
   error: string | null;
-}
-
-interface Stats {
-  totalArticles: number;
-  weekArticles: number;
-}
-
-interface ArticlesResponse {
-  articles: Article[];
-  total: number;
-  totalPages: number;
 }
 
 interface TaskResponse {
@@ -184,7 +167,7 @@ function HomeContent() {
   const fetchStats = useCallback(async () => {
     const result = await apiGet<Stats>("/api/stats", false);
     if (result.success) {
-      setStats({ totalArticles: result.data.totalArticles, weekArticles: result.data.weekArticles });
+      setStats(result.data);
     }
   }, []);
 

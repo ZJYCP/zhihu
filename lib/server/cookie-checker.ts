@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { getRuntimeConfig } from "@/lib/config/runtime-config";
+import { prisma } from "@/lib/server/prisma";
+import { getRuntimeConfig } from "@/lib/server/runtime-config";
 
 export async function runCookieCheck() {
   let success = false;

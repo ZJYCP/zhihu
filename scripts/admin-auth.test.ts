@@ -7,13 +7,13 @@ import {
   requireAdminRequest,
   verifyAdminToken,
   verifyAdminRequest,
-} from "../lib/admin-auth";
+} from "../lib/server/admin-auth";
 import {
   errorResponse,
   handleApiError,
   safeParseJson,
   successResponse,
-} from "../lib/api-response";
+} from "../lib/server/api-response";
 
 const secret = "test-secret-with-enough-entropy";
 const token = createAdminToken(secret, 1_700_000_000);
@@ -99,8 +99,8 @@ delete process.env.ADMIN_PASSWORD;
 const missingPassword = await postAuth(JSON.stringify({ password: "wrong" }));
 assert.equal(missingPassword.status, 500);
 assert.deepEqual(await missingPassword.json(), {
-  error: "管理密码未配置",
-  code: "ADMIN_PASSWORD_MISSING",
+  error: "ADMIN_PASSWORD 未配置",
+  code: "CONFIG_MISSING",
 });
 
 process.env.ADMIN_PASSWORD = "admin-password";
@@ -109,7 +109,7 @@ const missingSecret = await postAuth(JSON.stringify({ password: "wrong" }));
 assert.equal(missingSecret.status, 500);
 assert.deepEqual(await missingSecret.json(), {
   error: "APP_SECRET 未配置",
-  code: "APP_SECRET_MISSING",
+  code: "CONFIG_MISSING",
 });
 
 process.env.APP_SECRET = secret;

@@ -9,7 +9,7 @@ import {
   ChevronRight,
   Activity,
 } from "lucide-react"
-import type { PublicCookieStatus } from "@/lib/service-status"
+import type { PublicCookieStatus } from "@/lib/server/service-status"
 import { getServiceStatusForAbout } from "./-service-status.functions"
 
 export const Route = createFileRoute("/about/")({

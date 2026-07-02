@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
-import { errorResponse, handleApiError, jsonResponse } from "@/lib/api-response";
+import { prisma } from "@/lib/server/prisma";
+import { errorResponse, handleApiError, jsonResponse } from "@/lib/server/api-response";
 
 // GET /api/tasks/$id - 获取单个任务
 async function getTask(id: string) {

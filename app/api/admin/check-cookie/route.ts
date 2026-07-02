@@ -1,13 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireAdminRequest } from "@/lib/admin-auth";
-import { handleApiError, jsonResponse } from "@/lib/api-response";
-import { runCookieCheck } from "@/lib/cookie-checker";
+import { withAdmin } from "@/lib/server/admin-auth";
+import { handleApiError, jsonResponse } from "@/lib/server/api-response";
+import { runCookieCheck } from "@/lib/server/cookie-checker";
 
-async function checkCookie(request: Request) {
+async function checkCookie() {
   try {
-    const authError = requireAdminRequest(request);
-    if (authError) return authError;
-
     const result = await runCookieCheck();
     return jsonResponse(result);
   } catch (error) {
@@ -18,7 +15,7 @@ async function checkCookie(request: Request) {
 export const Route = createFileRoute("/api/admin/check-cookie")({
   server: {
     handlers: {
-      GET: async ({ request }) => checkCookie(request),
+      GET: withAdmin(() => checkCookie()),
     },
   },
 });

@@ -136,7 +136,6 @@ npm run db:migrate:dev     # 开发环境生成并应用 Prisma migration
 npm run db:migrate:deploy  # 生产环境应用已提交的 Prisma migration
 npm run db:push      # 原型期快速同步 Schema（不建议用于生产）
 npm run db:studio    # 打开 Prisma Studio
-npm run crawl <url>  # CLI 爬取单个文章
 npm run lint         # 代码检查
 ```
 

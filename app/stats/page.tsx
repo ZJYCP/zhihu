@@ -1,7 +1,7 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type { Stats } from "@/lib/shared/types";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   FileText,
@@ -10,16 +10,7 @@ import {
   AlertCircle,
   Clock,
 } from "lucide-react";
-import { apiGet } from "@/lib/api-client";
-
-interface Stats {
-  totalArticles: number;
-  weekArticles: number;
-  monthArticles: number;
-  failedTasks: number;
-  recentArticles: { id: string; title: string; createdAt: string }[];
-  dailyStats: { date: string; count: number }[];
-}
+import { apiGet } from "@/lib/client/api-client";
 
 export const Route = createFileRoute("/stats/")({
   head: () => ({

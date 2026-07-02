@@ -1,16 +1,13 @@
 import { FeedbackStatus } from "@prisma/client";
 import { createFileRoute } from "@tanstack/react-router";
-import { requireAdminRequest } from "@/lib/admin-auth";
-import { handleApiError, jsonResponse } from "@/lib/api-response";
-import { prisma } from "@/lib/prisma";
+import { withAdmin } from "@/lib/server/admin-auth";
+import { handleApiError, jsonResponse } from "@/lib/server/api-response";
+import { prisma } from "@/lib/server/prisma";
 
 const FEEDBACK_STATUSES = Object.values(FeedbackStatus);
 
 async function getAdminFeedback(request: Request) {
   try {
-    const authError = requireAdminRequest(request);
-    if (authError) return authError;
-
     const { searchParams } = new URL(request.url);
     const page = Number.parseInt(searchParams.get("page") || "1", 10);
     const limit = Number.parseInt(searchParams.get("limit") || "20", 10);
@@ -60,7 +57,7 @@ async function getAdminFeedback(request: Request) {
 export const Route = createFileRoute("/api/admin/feedback")({
   server: {
     handlers: {
-      GET: async ({ request }) => getAdminFeedback(request),
+      GET: withAdmin(({ request }) => getAdminFeedback(request)),
     },
   },
 });

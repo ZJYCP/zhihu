@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { handleApiError, jsonResponse } from "@/lib/api-response";
-import { runCookieCheck } from "@/lib/cookie-checker";
+import { handleApiError, jsonResponse } from "@/lib/server/api-response";
+import { runCookieCheck } from "@/lib/server/cookie-checker";
 
 // GET /api/cron/check-cookie - 检查 Cookie 可用性
 async function checkCookie() {

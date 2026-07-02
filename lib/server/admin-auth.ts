@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { errorResponse } from "./api-response";
+import { getAppSecret } from "./env";
 
 const TOKEN_TTL_SECONDS = 60 * 60 * 24;
 
@@ -81,12 +82,7 @@ export function getBearerToken(request: Request) {
 }
 
 export function getRequiredAppSecret() {
-  const secret = process.env.APP_SECRET;
-  if (!secret) {
-    throw new Error("APP_SECRET 未配置");
-  }
-
-  return secret;
+  return getAppSecret();
 }
 
 export function verifyAdminRequest(request: Request) {
@@ -107,4 +103,29 @@ export function requireAdminRequest(request: Request) {
   }
 
   return null;
+}
+
+/**
+ * 高阶函数：为 admin API handler 统一做鉴权，免去每个 handler 重复
+ * `requireAdminRequest(request); if (authError) return authError;` 样板。
+ *
+ * @example
+ * ```ts
+ * export const Route = createFileRoute("/api/admin/foo")({
+ *   server: {
+ *     handlers: {
+ *       GET: withAdmin(({ request }) => getFoo(request)),
+ *     },
+ *   },
+ * });
+ * ```
+ */
+export function withAdmin<TParams extends Record<string, string>>(
+  handler: (ctx: { request: Request; params: TParams }) => Promise<Response>,
+): (ctx: { request: Request; params: TParams }) => Promise<Response> {
+  return async (ctx) => {
+    const authError = requireAdminRequest(ctx.request);
+    if (authError) return authError;
+    return handler(ctx);
+  };
 }

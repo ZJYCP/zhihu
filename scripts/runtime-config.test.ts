@@ -6,7 +6,7 @@ import {
   maskConfigValue,
   serializeConfig,
   validateConfigValue,
-} from "../lib/config/runtime-config";
+} from "../lib/server/runtime-config";
 
 assert.deepEqual(RUNTIME_CONFIG_KEYS, [
   "zhihu_cookie",

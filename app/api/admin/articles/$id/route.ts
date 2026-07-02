@@ -1,14 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
-import { requireAdminRequest } from "@/lib/admin-auth";
-import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/api-response";
+import { prisma } from "@/lib/server/prisma";
+import { withAdmin } from "@/lib/server/admin-auth";
+import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
 
 // GET /api/admin/articles/$id - 获取单个文章详情
 async function getAdminArticle(request: Request, id: string) {
   try {
-    const authError = requireAdminRequest(request);
-    if (authError) return authError;
-
     const article = await prisma.crawlTask.findUnique({
       where: { id },
     });
@@ -26,9 +23,6 @@ async function getAdminArticle(request: Request, id: string) {
 // PUT /api/admin/articles/$id - 更新文章
 async function updateAdminArticle(request: Request, id: string) {
   try {
-    const authError = requireAdminRequest(request);
-    if (authError) return authError;
-
     const body = await safeParseJson<Record<string, unknown>>(request);
 
     if (!body) {
@@ -61,11 +55,8 @@ async function updateAdminArticle(request: Request, id: string) {
 }
 
 // DELETE /api/admin/articles/$id - 删除单个文章
-async function deleteAdminArticle(request: Request, id: string) {
+async function deleteAdminArticle(id: string) {
   try {
-    const authError = requireAdminRequest(request);
-    if (authError) return authError;
-
     await prisma.crawlTask.delete({ where: { id } });
     return jsonResponse({ success: true });
   } catch (error) {
@@ -76,9 +67,9 @@ async function deleteAdminArticle(request: Request, id: string) {
 export const Route = createFileRoute("/api/admin/articles/$id")({
   server: {
     handlers: {
-      GET: async ({ request, params }) => getAdminArticle(request, params.id),
-      PUT: async ({ request, params }) => updateAdminArticle(request, params.id),
-      DELETE: async ({ request, params }) => deleteAdminArticle(request, params.id),
+      GET: withAdmin(({ request, params }) => getAdminArticle(request, params.id)),
+      PUT: withAdmin(({ request, params }) => updateAdminArticle(request, params.id)),
+      DELETE: withAdmin(({ params }) => deleteAdminArticle(params.id)),
     },
   },
 });

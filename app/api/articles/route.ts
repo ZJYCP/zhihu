@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { prisma } from "@/lib/prisma";
-import { handleApiError, jsonResponse } from "@/lib/api-response";
+import { prisma } from "@/lib/server/prisma";
+import { handleApiError, jsonResponse } from "@/lib/server/api-response";
 
 // GET /api/articles - 获取已完成的文章列表
 async function getArticles(request: Request) {

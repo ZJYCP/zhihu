@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { ExternalLink, AlertTriangle, Loader2, MessageSquare, Send, X } from "lucide-react";
@@ -7,29 +5,12 @@ import { ExportButtons } from "./-export-buttons";
 import { BackButton } from "./-back-button";
 import { RecrawlButton } from "./-recrawl-button";
 import { Button } from "@/components/ui/button";
-import { apiGet, apiPost } from "@/lib/api-client";
+import { apiGet, apiPost } from "@/lib/client/api-client";
 import { getArticleForDetail } from "./-article.functions";
 import { toast } from "sonner";
 
-interface Article {
-  id: string;
-  title: string | null;
-  content: string | null;
-  author: string | null;
-  url: string;
-  status: string;
-  createdAt: string;
-  fontDecodeSuccess: boolean | null;
-}
-
-const FEEDBACK_TYPE_LABELS = {
-  INCOMPLETE_CONTENT: "内容不完整",
-  GARBLED_TEXT: "内容乱码",
-  MISSING_IMAGE: "图片缺失",
-  OTHER: "其他",
-} as const;
-
-type FeedbackType = keyof typeof FEEDBACK_TYPE_LABELS;
+import { FEEDBACK_TYPE_LABELS } from "@/lib/shared/types";
+import type { ArticleDetail, FeedbackType } from "@/lib/shared/types";
 
 export const Route = createFileRoute("/tasks/$id/")({
   loader: ({ params }) => getArticleForDetail({ data: { id: params.id } }),
@@ -56,7 +37,7 @@ export const Route = createFileRoute("/tasks/$id/")({
 function ArticlePage() {
   const { id } = Route.useParams();
   const initialArticle = Route.useLoaderData();
-  const [article, setArticle] = useState<Article | null>(initialArticle);
+  const [article, setArticle] = useState<ArticleDetail | null>(initialArticle);
   const [loading, setLoading] = useState(false);
   const [missing, setMissing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +53,7 @@ function ArticlePage() {
     setMissing(false);
 
     try {
-      const result = await apiGet<Article>(`/api/tasks/${id}`, false);
+      const result = await apiGet<ArticleDetail>(`/api/tasks/${id}`, false);
 
       if (!result.success) {
         if (result.status === 404 || result.code === "NOT_FOUND") {
