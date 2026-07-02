@@ -25,11 +25,17 @@ export default defineConfig({
       rolldownConfig: {
         external: [
           /^sharp(\/.*)?$/,
+          // @prisma/client 是 CJS，内部用 __dirname 定位 query-engine 二进制；
+          // 打进 ESM bundle 后 __dirname 不存在会运行时报错，故保持 external 由 node_modules 解析。
+          /^@prisma\/client(\/.*)?$/,
+          /^\.prisma\/client(\/.*)?$/,
         ],
       },
       rollupConfig: {
         external: [
           /^sharp(\/.*)?$/,
+          /^@prisma\/client(\/.*)?$/,
+          /^\.prisma\/client(\/.*)?$/,
         ],
       },
     }),
