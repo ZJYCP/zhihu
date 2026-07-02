@@ -69,8 +69,8 @@ export const CONFIG_DEFINITIONS: Record<
   },
   cookie_check_url: {
     label: "Cookie 检查 URL",
-    description: "用于验证知乎 Cookie 是否可用的页面 URL",
-    defaultValue: "https://www.zhihu.com/question/55860326/answer/2056067197",
+    description: "用于验证知乎 Cookie 是否可用，需用需要登录态的端点（默认 /api/v4/me）；问答页会被反爬返回 403",
+    defaultValue: "https://www.zhihu.com/api/v4/me",
     sensitive: false,
     kind: "string",
   },

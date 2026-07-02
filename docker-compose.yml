@@ -13,3 +13,5 @@ services:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
       APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
+      # 可选：不配置则 external 通道关闭（路由返回 503）
+      EXTERNAL_API_SECRET: ${EXTERNAL_API_SECRET:-}
