@@ -3,19 +3,19 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 
 /* global console */
 
-const aboutPage = readFileSync("app/about/page.tsx", "utf8");
-const articleDetailPage = readFileSync("app/tasks/$id/page.tsx", "utf8");
+const aboutPage = readFileSync("src/routes/about/page.tsx", "utf8");
+const articleDetailPage = readFileSync("src/routes/tasks/$id/page.tsx", "utf8");
 // 管理后台已拆分为 page.tsx + 多个 -*.tsx 私有子组件，契约需覆盖整个目录
 const adminPanelSource = [
-  "app/admin/page.tsx",
-  ...readdirSync("app/admin")
+  "src/routes/admin/page.tsx",
+  ...readdirSync("src/routes/admin")
     .filter((f) => f.startsWith("-") && f.endsWith(".tsx"))
-    .map((f) => `app/admin/${f}`),
+    .map((f) => `src/routes/admin/${f}`),
 ]
   .map((f) => readFileSync(f, "utf8"))
   .join("\n");
-const rootRoute = readFileSync("app/__root.tsx", "utf8");
-const router = readFileSync("router.tsx", "utf8");
+const rootRoute = readFileSync("src/routes/__root.tsx", "utf8");
+const router = readFileSync("src/router.tsx", "utf8");
 const prismaSchema = readFileSync("prisma/schema.prisma", "utf8");
 const viteConfig = readFileSync("vite.config.ts", "utf8");
 
