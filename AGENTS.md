@@ -58,7 +58,11 @@ TanStack Start API 路由，用 `createFileRoute(...)({ server: { handlers: { ME
 - `tasks/clear-failed/` - 清理失败任务
 - `admin/` - 管理接口（每个 handler 调 `requireAdminRequest` 鉴权）
   - `auth/` `config/` `articles/` `articles/$id/` `feedback/` `feedback/$id/` `check-cookie/` `cookie-status/`
-- `cron/check-cookie/` - 定时 Cookie 健康检查
+- `external/config/` - 外部系统用 secret 直接更新知乎 Cookie（`withExternalSecret` 鉴权，无需登录）
+
+### Nitro Tasks (`src/tasks/`)
+Nitro scheduled tasks（experimental），由 `vite.config.ts` 的 `experimental.tasks` + `scheduledTasks` + 显式 `tasks` handler 驱动，内置 croner 引擎在 node-server 启动时调度。
+- `cookie-check.ts` - 每 30 分钟调用 `runCookieCheck()` 检查 Cookie 可用性
 
 ### Crawler Core (`src/lib/crawler/`)
 - `crawler.ts` - 主爬虫类 `ZhihuCrawler`，调度问答/付费专栏爬取
@@ -69,7 +73,7 @@ TanStack Start API 路由，用 `createFileRoute(...)({ server: { handlers: { ME
 
 ### Server Lib (`src/lib/server/`)
 - `prisma.ts` - Prisma 客户端单例
-- `admin-auth.ts` - HMAC token 鉴权（APP_SECRET 签名，24h TTL）
+- `admin-auth.ts` - HMAC token 鉴权（APP_SECRET 签名，24h TTL）+ 外部系统 secret 鉴权（`withExternalSecret`）
 - `api-response.ts` - 服务端 Response 构造与错误映射
 - `rate-limiter.ts` - DB 驱动的 IP 限流
 - `cookie-checker.ts` - Cookie 健康检查
@@ -89,6 +93,7 @@ TanStack Start API 路由，用 `createFileRoute(...)({ server: { handlers: { ME
 - `ADMIN_PASSWORD` - 管理后台登录密码
 - `APP_SECRET` - admin token 签名密钥
 - `PORT` - 服务端口（默认 3000）
+- `EXTERNAL_API_SECRET` - 外部系统直接更新 Cookie 的鉴权密钥（可选，不配置则该通道关闭）
 
 运行时配置（存 DB `SystemConfig` 表，经管理后台 `/admin` 修改，不在文件中）：
 - `zhihu_cookie` `siliconflow_api_key` `crawler_user_agent` `request_delay_ms` `rate_limit_window_ms` `rate_limit_max_requests` `cookie_check_url`
@@ -97,6 +102,8 @@ TanStack Start API 路由，用 `createFileRoute(...)({ server: { handlers: { ME
 
 1. **字体反爬处理流程**：知乎使用自定义字体混淆文字，本项目通过 opentype.js 解析字体文件，用 sharp 将字形渲染为图像，再通过 OCR 识别真实字符。
 
-2. **配置体系**：启动密钥（数据库/管理密码/签名密钥）走 `.env`；爬虫所需的 Cookie、API Key、User-Agent 等可变配置走 DB `SystemConfig` 运行时配置，无需手动改文件。`src/lib/crawler/config.ts` 的 `getCrawlerConfig()` 从 DB 读取。
+2. **配置体系**：启动密钥（数据库/管理密码/签名密钥）走 `.env`；爬虫所需的 Cookie、API Key、User-Agent 等可变配置走 DB `SystemConfig` 运行时配置，无需手动改文件。`src/lib/crawler/config.ts` 的 `getCrawlerConfig()` 从 DB 读取。外部系统可通过 `EXTERNAL_API_SECRET` + `POST /api/external/config` 直接更新 `zhihu_cookie`，无需 admin token 登录。
 
 3. **Admin 鉴权**：`/api/admin/auth` 校验 `ADMIN_PASSWORD` 后签发 HMAC token（`APP_SECRET`），客户端存 `localStorage`，`api-client` 对 `/api/admin/*` 请求自动带 `Authorization: Bearer`。
+
+4. **Cookie 定时检查**：Nitro scheduled task（`src/tasks/cookie-check.ts`）每 30 分钟调用 `runCookieCheck()`，由 `vite.config.ts` 的 `experimental.tasks` + `scheduledTasks` 配置驱动，内置 croner 引擎在 node-server 启动时调度（dev 模式同样生效；`process.env.TEST` 为真时跳过）。手动触发走已鉴权的 `/api/admin/check-cookie`。

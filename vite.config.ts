@@ -1,3 +1,4 @@
+import path from "node:path";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -22,6 +23,20 @@ export default defineConfig({
     viteReact(),
     nitro({
       noExternals: true,
+      // Nitro tasks 为 experimental，开启后 scheduledTasks 才会在 dev 与
+      // node-server 生产环境由内置 croner 引擎调度
+      experimental: { tasks: true },
+      // 显式注册 task handler（绝对路径）：TanStack Start 改了 srcDirectory，
+      // Nitro 默认 tasks/ 文件扫描与相对 handler 路径都解析不到，故用绝对路径。
+      tasks: {
+        "cookie-check": {
+          handler: path.resolve(import.meta.dirname, "src/tasks/cookie-check.ts"),
+          description: "定时检查知乎 Cookie 可用性，写库并清理 7 天前记录",
+        },
+      },
+      scheduledTasks: {
+        "*/30 * * * *": "cookie-check",
+      },
       rolldownConfig: {
         external: [
           /^sharp(\/.*)?$/,
