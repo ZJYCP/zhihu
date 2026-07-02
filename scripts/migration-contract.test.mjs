@@ -134,16 +134,19 @@ assert.match(
   "admin panel should read feedback from the protected admin feedback API",
 );
 
-assert.doesNotMatch(
+// @prisma/client 是 CJS，内部用 __dirname 定位 query-engine 二进制。
+// 若被 Nitro 打进 ESM bundle，__dirname 不存在会运行时报错（Docker Node ESM）。
+// 故必须 externalize，由 node_modules 在运行时以 CJS 上下文解析。
+assert.match(
   viteConfig,
   /external:\s*\[[\s\S]*@prisma\\\/client/,
-  "Nitro must not externalize @prisma/client because Vercel serverless output needs Prisma bundled",
+  "Nitro must externalize @prisma/client so its CJS __dirname works at runtime (ESM bundle would break it)",
 );
 if (existsSync(".output/server")) {
   assert.equal(
     existsSync(".output/server/_libs/@prisma/client.mjs"),
-    true,
-    "production build should bundle Prisma Client for Vercel serverless runtime",
+    false,
+    "production build must not inline @prisma/client into the ESM server bundle (would break __dirname)",
   );
 
   const barePrismaImports = collectServerBundleFiles(".output/server").filter(
@@ -153,10 +156,9 @@ if (existsSync(".output/server")) {
       ),
   );
 
-  assert.deepEqual(
-    barePrismaImports,
-    [],
-    "production server bundle must not contain bare @prisma/client imports",
+  assert.ok(
+    barePrismaImports.length > 0,
+    "production server bundle must keep @prisma/client as a runtime import (externalized), not inline it",
   );
 }
 assert.equal(
