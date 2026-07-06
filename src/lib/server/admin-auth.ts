@@ -21,6 +21,9 @@ function safeEqual(left: string, right: string) {
   const rightBuffer = Buffer.from(right);
 
   if (leftBuffer.length !== rightBuffer.length) {
+    // 长度不等时仍执行恒定时间比较，避免时序侧信道泄露长度信息
+    const dummy = Buffer.alloc(rightBuffer.length);
+    timingSafeEqual(dummy, rightBuffer);
     return false;
   }
 

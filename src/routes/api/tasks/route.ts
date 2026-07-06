@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/server/prisma";
 import { cleanZhihuUrl } from "@/lib/crawler";
 import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
+import { checkRateLimit } from "@/lib/server/rate-limiter";
 
 // GET /api/tasks - 获取任务列表
 async function getTasks(request: Request) {
@@ -49,6 +50,14 @@ async function getTasks(request: Request) {
 // POST /api/tasks - 创建任务
 async function createTask(request: Request) {
   try {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ||
+               request.headers.get("x-real-ip") ||
+               "unknown";
+    const { allowed } = await checkRateLimit(ip);
+    if (!allowed) {
+      return errorResponse("请求过于频繁，请稍后再试", 429, "RATE_LIMIT_EXCEEDED");
+    }
+
     const body = await safeParseJson<{ url?: string }>(request);
 
     if (!body) {

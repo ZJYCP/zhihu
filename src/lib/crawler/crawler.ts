@@ -30,7 +30,10 @@ function zhihuHeaders(config: CrawlerConfig): Record<string, string> {
 
 /** 抓取知乎页面 HTML，失败抛错 */
 async function fetchZhihuHtml(url: string, config: CrawlerConfig): Promise<string> {
-  const response = await fetch(url, { headers: zhihuHeaders(config) });
+  const response = await fetch(url, {
+    headers: zhihuHeaders(config),
+    signal: AbortSignal.timeout(30_000),
+  });
   if (!response.ok) {
     throw new Error(`请求失败: ${response.status} ${response.statusText}`);
   }
@@ -100,7 +103,10 @@ export class ZhihuCrawler {
     if (parsed.type === "question") {
       return this.crawlQuestion(url);
     }
-    return this.crawlPaidColumn(url);
+    if (parsed.type === "paid_column") {
+      return this.crawlPaidColumn(url);
+    }
+    throw new Error(`不支持的 URL 格式: ${url}`);
   }
 
   // 爬取问答页面（字体在第一个 @font-face，索引 0）

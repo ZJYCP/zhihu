@@ -39,6 +39,7 @@ export async function ocrImage(
         ],
         temperature: 0,
       }),
+      signal: AbortSignal.timeout(60_000),
     }
   );
 
@@ -47,5 +48,5 @@ export async function ocrImage(
   }
 
   const result = await response.json();
-  return { content: result.choices[0]?.message?.content || "" };
+  return { content: result.choices?.[0]?.message?.content || "" };
 }

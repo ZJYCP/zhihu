@@ -1,7 +1,7 @@
 import { FeedbackStatus } from "@prisma/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { withAdmin } from "@/lib/server/admin-auth";
-import { handleApiError, jsonResponse } from "@/lib/server/api-response";
+import { handleApiError, jsonResponse, parsePagination } from "@/lib/server/api-response";
 import { prisma } from "@/lib/server/prisma";
 
 const FEEDBACK_STATUSES = Object.values(FeedbackStatus);
@@ -9,8 +9,7 @@ const FEEDBACK_STATUSES = Object.values(FeedbackStatus);
 async function getAdminFeedback(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = Number.parseInt(searchParams.get("page") || "1", 10);
-    const limit = Number.parseInt(searchParams.get("limit") || "20", 10);
+    const { page, limit } = parsePagination(searchParams);
     const status = searchParams.get("status") || "";
     const where =
       status && FEEDBACK_STATUSES.includes(status as FeedbackStatus)

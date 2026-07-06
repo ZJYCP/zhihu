@@ -1,14 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/server/prisma";
 import { withAdmin } from "@/lib/server/admin-auth";
-import { errorResponse, handleApiError, jsonResponse, safeParseJson } from "@/lib/server/api-response";
+import { errorResponse, handleApiError, jsonResponse, parsePagination, safeParseJson } from "@/lib/server/api-response";
 
 // GET /api/admin/articles - 获取文章列表（支持搜索和分页）
 async function getAdminArticles(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const { page, limit } = parsePagination(searchParams);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
 

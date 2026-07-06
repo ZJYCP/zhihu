@@ -19,6 +19,7 @@ export async function runCookieCheck() {
           Accept: "application/json",
           Referer: "https://www.zhihu.com/",
         },
+        signal: AbortSignal.timeout(15_000),
       });
 
       if (response.ok) {

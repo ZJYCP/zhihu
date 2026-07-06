@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/lib/server/prisma";
-import { handleApiError, jsonResponse } from "@/lib/server/api-response";
+import { handleApiError, jsonResponse, parsePagination } from "@/lib/server/api-response";
 
 // GET /api/articles - 获取已完成的文章列表
 async function getArticles(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const { page, limit } = parsePagination(searchParams);
     const search = searchParams.get("search") || "";
     const type = searchParams.get("type"); // "url" 表示按 URL 精确匹配
 

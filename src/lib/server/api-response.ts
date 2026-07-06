@@ -82,9 +82,8 @@ export function handleApiError(
   error: unknown,
   defaultMessage: string = "操作失败"
 ): Response {
-  if (process.env.NODE_ENV === "development") {
-    console.error("[API Error]", error);
-  }
+  // 所有环境都记录错误日志，便于线上排查问题
+  console.error("[API Error]", error);
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     const { message, status, code } = handlePrismaError(error);
@@ -108,7 +107,11 @@ export function handleApiError(
       return errorResponse("请求体格式错误，请检查 JSON 格式", 400, "JSON_PARSE_ERROR");
     }
 
-    return errorResponse(error.message || defaultMessage, 500, "INTERNAL_ERROR");
+    // 生产环境不暴露内部错误信息，避免泄露敏感数据
+    const message = process.env.NODE_ENV === "development"
+      ? (error.message || defaultMessage)
+      : defaultMessage;
+    return errorResponse(message, 500, "INTERNAL_ERROR");
   }
 
   return errorResponse(defaultMessage, 500, "UNKNOWN_ERROR");
@@ -122,4 +125,13 @@ export async function safeParseJson<T = Record<string, unknown>>(
   } catch {
     return null;
   }
+}
+
+/**
+ * 校验并规范化分页参数，防止 NaN / 负数 / 超大值
+ */
+export function parsePagination(searchParams: URLSearchParams, defaults = { page: 1, limit: 20 }) {
+  const page = Math.max(Number.parseInt(searchParams.get("page") || String(defaults.page), 10) || 1, 1);
+  const limit = Math.min(Math.max(Number.parseInt(searchParams.get("limit") || String(defaults.limit), 10) || defaults.limit, 1), 100);
+  return { page, limit };
 }
