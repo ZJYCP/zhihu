@@ -8,6 +8,7 @@ import {
   Copy,
   ChevronRight,
   Activity,
+  Sparkles,
 } from "lucide-react"
 import type { PublicCookieStatus } from "@/lib/server/service-status"
 import { getServiceStatusForAbout } from "./-service-status.functions"
@@ -165,6 +166,39 @@ function AboutPage() {
                   </span>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 流星 API 赞助 */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-violet-500" />
+                流星 API · AI 模型中转站
+              </CardTitle>
+              <span className="rounded px-1.5 py-0.5 text-[10px] text-[hsl(var(--muted-foreground))] border border-[hsl(var(--border))]">
+                赞助
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-sm text-[hsl(var(--muted-foreground))]">
+              <p>
+                一个聚合 OpenAI、Claude、Gemini
+                等主流大模型的 API 中转平台，统一接口格式，一个 Key
+                即可调用多家模型，按量计费，比官方更灵活省心。
+              </p>
+              <a
+                href="https://hub.meteorlab.top"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md bg-[hsl(var(--foreground))] px-4 py-2 text-sm font-medium text-[hsl(var(--background))] transition-opacity hover:opacity-90"
+              >
+                前往流星 API
+                <ChevronRight className="h-4 w-4" />
+              </a>
             </div>
           </CardContent>
         </Card>
